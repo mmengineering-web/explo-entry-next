@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Camera, Compass, Image as ImageIcon } from "lucide-react";
 import { core, type Info } from "@/lib/boot";
+import { takeEditing } from "@/lib/editing";
 import { useToast } from "./toast";
 import { Button } from "./ui/button";
 import { Input, Select, Textarea } from "./ui/input";
@@ -68,7 +69,8 @@ export function ProgressForm({ info, tick }: { info: Info; tick?: string }) {
   useEffect(() => {
     (async () => {
       const { shift } = await load();
-      setF(blank(shift, localStorage.getItem("exp_last_rig") || ""));
+      const pend = takeEditing("progress");
+      if (pend) { setRec(pend); setF(toForm(pend)); lastHole.current = pend.hole_id; } else setF(blank(shift, localStorage.getItem("exp_last_rig") || ""));
       setReady(true);
     })();
   }, [load]);

@@ -39,8 +39,7 @@ with sync_playwright() as p:
     state = lambda: pg.evaluate("document.querySelector('#corebox').dataset.open")
     check('core box open for empty hole', state() == 'true', state())
     pg.fill('[name=hole_id]', 'WKM-DD-0003'); pg.wait_for_timeout(500)
-    check('known non-coring hole hides core box', state() == 'false', state())
-    check('hidden core box is inert', pg.evaluate("document.querySelector('#corebox').hasAttribute('inert')"))
+    check('known coring (DD) hole keeps core box open', state() == 'true', state())
     check('From auto-filled from last depth', pg.input_value('[name=from_m]') == '45', pg.input_value('[name=from_m]'))
     check('From hint visible', pg.is_visible('#from-hint'))
     check('depth bar visible', pg.is_visible('#depth'))
@@ -82,6 +81,16 @@ with sync_playwright() as p:
     pg.click('header button[aria-label="Ganti tema"]'); pg.wait_for_timeout(200)
     check('theme toggles', pg.evaluate("document.documentElement.dataset.theme") == 'dark')
     check('desktop no overflow', pg.evaluate(noh)); check('no JS errors (desktop)', not errs, errs); b.close()
+
+    # a known NON-coring hole (auger) hides the core box and makes it inert; a collar is injected into the device DB, then the form is remounted
+    b, pg, errs = mk(p); login(pg)
+    pg.evaluate("""async()=>{const r=await new Promise(res=>{const q=indexedDB.open('exploration_WKM');q.onsuccess=()=>res(q.result)});
+      await new Promise(res=>{const t=r.transaction('collars','readwrite');t.objectStore('collars').put({id:'ag-1',hole_id:'WKM-AG-0001',hole_type:'AG',status:'drilling',is_deleted:false});t.oncomplete=res})}""")
+    pg.click('aside button[data-t=hours]'); pg.wait_for_selector('#hlists'); pg.click('aside button[data-t=progress]'); pg.wait_for_selector('#corebox'); pg.wait_for_timeout(500)
+    pg.fill('[name=hole_id]', 'WKM-AG-0001'); pg.wait_for_timeout(500)
+    check('known non-coring hole hides core box', pg.evaluate("document.querySelector('#corebox').dataset.open") == 'false')
+    check('hidden core box is inert', pg.evaluate("document.querySelector('#corebox').hasAttribute('inert')"))
+    check('no JS errors (non-coring)', not errs, errs); b.close()
 
     # phone
     b, pg, errs = mk(p, 390, 844); login(pg); pg.wait_for_timeout(2500)

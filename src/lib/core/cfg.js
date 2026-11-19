@@ -16,7 +16,9 @@ export async function loadCfg() {
 export const setting = k => settings[k] ?? DEFAULTS[k];
 
 function rowsOf(list) {
-  if (codeRows) return codeRows.filter(r => r.list_code === list);
+  // a list the site database does not define at all falls back to the built-in codes (a deactivated list still has rows, so it stays empty)
+  const own = codeRows ? codeRows.filter(r => r.list_code === list) : [];
+  if (own.length) return own;
   return (DEFAULT_CODES[list] || []).map(r => ({ list_code: list, ...r }));
 }
 

@@ -14,6 +14,10 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { Button } from "./ui/button";
 import { ProgressForm } from "./progress-form";
 import { Soon } from "./soon";
+import { CollarForm } from "./collar-form";
+import { HoursForm } from "./hours-form";
+import { SampleForm } from "./sample-form";
+import { ConfirmProvider } from "./confirm";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -40,9 +44,9 @@ export function AppShell() {
 
   if (info === undefined) return <div className="grid min-h-dvh place-items-center text-sm text-muted-foreground" aria-busy>Memuat…</div>;
   return (
-    <ToastProvider>
+    <ToastProvider><ConfirmProvider>
       {info ? <Main info={info} onLogout={() => setInfo(null)} /> : <Login onDone={setInfo} />}
-    </ToastProvider>
+    </ConfirmProvider></ToastProvider>
   );
 }
 
@@ -134,7 +138,11 @@ function Main({ info, onLogout }: { info: Info; onLogout: () => void }) {
       <main className="mx-auto w-full max-w-[var(--content-max)] px-4 pb-[calc(var(--tabbar-h)+var(--safe-b)+1.5rem)] pt-5 lg:pb-10">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }} data-tab={tab} id="view">
-            {tab === "progress" ? <ProgressForm info={info} tick={`${st.last}-${st.pending}`} /> : <Soon label={cur?.label ?? ""} />}
+            {tab === "progress" ? <ProgressForm info={info} tick={`${st.last}-${st.pending}`} />
+              : tab === "collars" ? <CollarForm info={info} tick={`${st.last}-${st.pending}`} />
+              : tab === "hours" ? <HoursForm info={info} tick={`${st.last}-${st.pending}`} />
+              : tab === "samples" ? <SampleForm info={info} tick={`${st.last}-${st.pending}`} />
+              : <Soon label={cur?.label ?? ""} />}
           </motion.div>
         </AnimatePresence>
       </main>
