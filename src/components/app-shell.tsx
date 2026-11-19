@@ -87,10 +87,10 @@ function Main({ info, onLogout }: { info: Info; onLogout: () => void }) {
   }, [tabs]);
   const cur = TABS.find(t => t.key === tab);
 
-  const chip = st.error ? { t: "error sync", c: "text-danger border-[var(--danger-border)] bg-[var(--danger-bg)]", i: "AlertTriangle" }
-    : !st.online ? { t: `offline · ${st.pending} menunggu`, c: "text-warning border-[var(--warning-border)] bg-[var(--warning-bg)]", i: "WifiOff" }
-    : st.syncing ? { t: "mengirim…", c: "text-info border-[var(--info-border)] bg-[var(--info-bg)]", i: "RefreshCw" }
-    : { t: `online · ${st.pending} pending`, c: "text-success border-[var(--success-border)] bg-[var(--success-bg)]", i: "Wifi" };
+  const chip = st.error ? { t: "error sync", s: "error", c: "text-danger border-[var(--danger-border)] bg-[var(--danger-bg)]", i: "AlertTriangle" }
+    : !st.online ? { t: `offline · ${st.pending} menunggu`, s: st.pending ? `${st.pending} menunggu` : "offline", c: "text-warning border-[var(--warning-border)] bg-[var(--warning-bg)]", i: "WifiOff" }
+    : st.syncing ? { t: "mengirim…", s: "kirim…", c: "text-info border-[var(--info-border)] bg-[var(--info-bg)]", i: "RefreshCw" }
+    : { t: `online · ${st.pending} pending`, s: st.pending ? `${st.pending} pending` : "online", c: "text-success border-[var(--success-border)] bg-[var(--success-bg)]", i: "Wifi" };
 
   return (
     <div className="min-h-dvh lg:pl-[var(--side-w)]">
@@ -119,11 +119,11 @@ function Main({ info, onLogout }: { info: Info; onLogout: () => void }) {
       {/* top bar */}
       <header className="sticky top-0 z-[20] flex h-[var(--topbar-h)] items-center gap-3 border-b bg-[color-mix(in_srgb,var(--card)_92%,transparent)] px-4 backdrop-blur" style={{ paddingTop: "var(--safe-t)" }}>
         <span className="absolute inset-x-0 -bottom-px h-0.5 origin-left bg-[image:var(--strata-stripe)] [animation:m-stripe_var(--dur-4)_var(--ease-out)_both]" />
-        <div className="flex min-w-0 items-center gap-2 lg:hidden"><BrandMark className="size-8" /><div className="min-w-0 text-sm leading-tight"><div className="font-semibold">{info.site}</div><div className="truncate text-xs text-muted-foreground">{info.name}</div></div></div>
+        <div className="flex min-w-0 flex-1 items-center gap-2 lg:hidden"><BrandMark className="size-8 shrink-0" /><div className="min-w-0 text-sm leading-tight"><div className="truncate font-semibold">{info.site}</div><div className="truncate text-xs text-muted-foreground">{info.name}</div></div></div>
         <h1 className="hidden text-base font-semibold lg:block">{cur?.label}</h1>
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           <motion.span key={chipKey} initial={{ scale: 0.92, opacity: 0.6 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 500, damping: 22 }}
-            className={cn("mr-1 inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-xs font-medium", chip.c)} id="sync-chip"><Ico name={chip.i} className={cn("size-3", st.syncing && "animate-spin")} />{chip.t}</motion.span>
+            className={cn("mr-1 inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 text-xs font-medium", chip.c)} id="sync-chip"><Ico name={chip.i} className={cn("size-3", st.syncing && "animate-spin")} /><span className="sm:hidden">{chip.s}</span><span className="hidden sm:inline">{chip.t}</span></motion.span>
           <Button variant="ghost" size="sm" onClick={() => setPal(true)} aria-label="Cari atau buka perintah" id="b-pal"><Search /><kbd className="hidden rounded border bg-muted px-1.5 font-mono text-[.6875rem] text-muted-foreground sm:inline">Ctrl K</kbd></Button>
           {!info.guest && <Button variant="ghost" size="icon" onClick={() => core().then(c => c.S.syncNow())} aria-label="Sync sekarang"><RefreshCw /></Button>}
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Ganti tema">{theme === "dark" ? <Sun /> : <Moon />}</Button>
