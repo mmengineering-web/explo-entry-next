@@ -1,26 +1,233 @@
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   Design tokens. Layer 1 of the design system.
+   Naming follows shadcn/ui (Nova) so the whole system maps 1:1 to shadcn/ui.
+   Identity "Laterite" (v1.4): warm stone neutrals + one laterite-orange action color,
+   chosen for sunlight legibility on phones in the field. Contrast checked in docs/DESIGN_SYSTEM.md. Light is :root, dark is [data-theme="dark"].
+   Only tokens live here. No component rules.
+   ========================================================================== */
+
+:root{
+  color-scheme:light;
+
+  /* ---- color roles (semantic) ---- */
+  --background:#ffffff;            --foreground:#1c1917;
+  --card:#ffffff;                  --card-foreground:#1c1917;
+  --popover:#ffffff;               --popover-foreground:#1c1917;
+  --primary:#c2410c;               --primary-foreground:#ffffff;   /* laterite: 5.2:1 on white */
+  --secondary:#f3efea;             --secondary-foreground:#1c1917;
+  --muted:#f5f2ee;                 --muted-foreground:#645d56;   /* 6.2:1 on white, 5.6:1 on page */
+  --accent:#f6ece4;                --accent-foreground:#1c1917;
+  --destructive:#b91c1c;           --destructive-foreground:#ffffff;
+  --border:#e6e0d9;                --input:#948b82;              /* 3.3:1 on white: field edge readable in direct sun */
+  --ring:#c2410c;
+  --page:#f7f5f2;                  /* app canvas behind the cards */
+
+  /* ---- status (always paired with an icon or label, never color alone) ---- */
+  --success:#15803d;  --success-bg:#f0fdf4;  --success-border:#bbf7d0;
+  --warning:#a16207;  --warning-bg:#fffbeb;  --warning-border:#fde68a;
+  --info:#1d4ed8;     --info-bg:#eff6ff;     --info-border:#bfdbfe;
+  --danger:#b91c1c;   --danger-bg:#fef2f2;   --danger-border:#fecaca;
+  --accent-brand:#b3380a;                    /* links, active nav marker (5.9:1 on white) */
+
+  /* ---- data-viz categorical order (fixed, never cycled; validated in docs/DESIGN_SYSTEM.md) ---- */
+  --chart-1:#2563eb; --chart-2:#d97706; --chart-3:#0d9488; --chart-4:#9333ea; --chart-5:#db2777; --chart-6:#65a30d;
+  --chart-plan:#a8a29e;                      /* plan / target series */
+  --chart-grid:#e6e0d9; --chart-text:#57534e;
+
+  /* ---- shape ---- */
+  --radius:.625rem;
+  --radius-sm:calc(var(--radius) - 4px);  /* 6  */
+  --radius-md:calc(var(--radius) - 2px);  /* 8  */
+  --radius-lg:var(--radius);              /* 10 */
+  --radius-xl:calc(var(--radius) + 4px);  /* 14 */
+  --radius-full:999px;
+
+  /* ---- elevation ---- */
+  --shadow-xs:0 1px 2px rgba(60,40,20,.06);
+  --shadow-sm:0 1px 2px rgba(60,40,20,.07),0 1px 3px rgba(60,40,20,.06);
+  --shadow-md:0 4px 12px rgba(60,40,20,.09),0 2px 4px rgba(60,40,20,.05);
+  --shadow-lg:0 16px 40px rgba(60,40,20,.18),0 4px 12px rgba(60,40,20,.08);
+  --overlay:rgba(28,25,23,.55);
+
+  /* ---- type ---- */
+  --font-sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --text-xs:.75rem;  --text-sm:.875rem;  --text-base:1rem;  --text-lg:1.125rem;  --text-xl:1.25rem;  --text-2xl:1.5rem;  --text-3xl:1.875rem;
+  --leading-tight:1.25;  --leading-snug:1.4;  --leading-normal:1.55;
+
+  /* ---- space (4px grid) ---- */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px;
+
+  /* ---- controls: one height for every input/button so rows line up ---- */
+  --control-h:2.5rem;       /* 40px */
+  --control-h-sm:2rem;      /* 32px */
+  --control-h-lg:3rem;      /* 48px, primary field action */
+  --touch-min:2.75rem;      /* 44px, never go below on touch */
+  --card-pad:1.25rem;       /* card padding; the sticky save bar bleeds by exactly this */
+
+  /* ---- layout ---- */
+  --side-w:15.5rem; --topbar-h:3.5rem; --tabbar-h:4rem; --content-max:68rem;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+
+  /* ---- motion ---- */
+  --ease:cubic-bezier(.2,.7,.2,1); --ease-out:cubic-bezier(.16,1,.3,1); --dur-1:.12s; --dur-2:.2s; --dur-3:.32s;
+
+  /* ---- z layers (single scale: never write a raw z-index in a component) ---- */
+  --z-sticky:10; --z-nav:20; --z-popover:40; --z-overlay:60; --z-toast:80;
+
+  /* ---- legacy aliases: older screens (map, dashboard, QC) still read these. Remove when no rule uses them. ---- */
+  --bg:var(--page); --panel:var(--card); --panel2:var(--muted); --line:var(--border); --line2:var(--input);
+  --txt:var(--foreground); --mut:var(--muted-foreground);
+  --blue:var(--primary); --blue-d:var(--primary); --blue-l:var(--accent); --cyan:var(--accent-brand);
+  --good:var(--success); --good-l:var(--success-bg); --warn:var(--warning); --warn-l:var(--warning-bg); --bad:var(--danger); --bad-l:var(--danger-bg);
+  --r:var(--radius-xl); --hdr:var(--topbar-h); --shadow:var(--shadow-sm);
 }
 
+[data-theme="dark"]{
+  color-scheme:dark;
+  --background:#0f0d0c;            --foreground:#faf7f4;
+  --card:#1a1714;                  --card-foreground:#faf7f4;
+  --popover:#221e1a;               --popover-foreground:#faf7f4;
+  --primary:#fb923c;               --primary-foreground:#1c0f05;   /* 8.6:1 */
+  --secondary:#2a2520;             --secondary-foreground:#faf7f4;
+  --muted:#211d19;                 --muted-foreground:#aaa198;   /* 7.3:1 on card */
+  --accent:#2c2520;                --accent-foreground:#faf7f4;
+  --destructive:#ef4444;           --destructive-foreground:#0f0d0c;
+  --border:rgba(255,240,225,.11);  --input:rgba(255,240,225,.34);
+  --ring:#fb923c;
+  --page:#0f0d0c;
+
+  --success:#4ade80;  --success-bg:rgba(74,222,128,.1);  --success-border:rgba(74,222,128,.28);
+  --warning:#fbbf24;  --warning-bg:rgba(251,191,36,.1);  --warning-border:rgba(251,191,36,.28);
+  --info:#7aa8ff;     --info-bg:rgba(96,140,255,.12);    --info-border:rgba(96,140,255,.3);
+  --danger:#f87171;   --danger-bg:rgba(248,113,113,.1);  --danger-border:rgba(248,113,113,.3);
+  --accent-brand:#fdba74;
+
+  --chart-1:#6ea0ff; --chart-2:#f5a524; --chart-3:#2dd4bf; --chart-4:#c084fc; --chart-5:#f472b6; --chart-6:#a3e635;
+  --chart-plan:#78716c;
+  --chart-grid:rgba(255,240,225,.11); --chart-text:#aaa198;
+
+  --shadow-xs:0 1px 2px rgba(0,0,0,.5);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03);
+  --shadow-md:0 6px 16px rgba(0,0,0,.5);
+  --shadow-lg:0 20px 48px rgba(0,0,0,.7);
+  --overlay:rgba(0,0,0,.7);
+}
+
+@media (pointer:coarse){:root{--control-h:3rem;--control-h-sm:2.5rem}}
+@media (max-width:480px){:root{--card-pad:1rem}}
+@media (prefers-reduced-motion:reduce){:root{--dur-1:0s;--dur-2:0s}}
+
+/* ==========================================================================
+   v2.0 "Strata" additions. The laterite profile (topsoil, limonite, transition, saprolite, bedrock)
+   is the brand motif: it draws the horizon line, the logo, the depth bar and the login scene.
+   Everything below is additive; no v1.x token changed meaning.
+   ========================================================================== */
+:root{
+  --strata-1:#7c2d12; --strata-2:#c2410c; --strata-3:#d9723f; --strata-4:#e3a47c; --strata-5:#ecc9b0;
+  --strata-stripe:linear-gradient(90deg,var(--primary),color-mix(in srgb,var(--primary) 0%,transparent));
+  --glow:rgba(194,65,12,.22);
+  --surface-hi:rgba(255,255,255,.75);      /* 1px top highlight on raised surfaces */
+  --ease-spring:cubic-bezier(.34,1.45,.5,1);
+  --dur-4:.55s; --stagger:45ms;
+}
+[data-theme="dark"]{
+  --strata-1:#9a3412; --strata-2:#ea580c; --strata-3:#f08a52; --strata-4:#b8704a; --strata-5:#7a4a33;
+  --glow:rgba(251,146,60,.2); --surface-hi:rgba(255,240,225,.06);
+}
+/* density: comfortable (default) or compact, chosen per device from the command palette */
+html[data-density="compact"]{--control-h:2.25rem;--control-h-sm:1.875rem;--control-h-lg:2.625rem;--card-pad:.9rem}
+@media (pointer:coarse){html[data-density="compact"]{--control-h:2.75rem;--control-h-sm:2.25rem;--control-h-lg:2.875rem}}
+@media (prefers-reduced-motion:reduce){:root{--dur-3:0s;--dur-4:0s;--stagger:0ms}}
+
+/* ---- Tailwind v4 theme mapping (shadcn names) ---- */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-page: var(--page);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-brand: var(--accent-brand);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@layer base {
+  * { border-color: var(--border); }
+  html { background: var(--page); -webkit-text-size-adjust: 100%; }
+  body { background: var(--page); color: var(--foreground); font-family: var(--font-sans); font-size: 1rem; line-height: 1.55; }
+  button, [role=button], a, select, summary { touch-action: manipulation; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---- motion: plays once, never loops, stops under reduced motion ---- */
+@keyframes m-rise { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+@keyframes m-stripe { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+.enter > * { animation: m-rise var(--dur-4) var(--ease-out) both; animation-delay: calc(var(--i, 0) * var(--stagger)); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0s !important; transition-duration: .001ms !important; } }
+
+/* required-field dot instead of an asterisk */
+label:has(:required) > .lbl::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 9999px; background: var(--accent-brand); vertical-align: 1px; }
+
+/* density, per device */
+html[data-density="compact"] { --control-h: 2.25rem; --control-h-sm: 1.875rem; --card-pad: .9rem; }
+@media (pointer: coarse) { html[data-density="compact"] { --control-h: 2.75rem; --control-h-sm: 2.25rem; } }
+
+/* dynamic-rule collapse: grid-row transition, no height measuring */
+.dyn { display: grid; grid-template-rows: 1fr; transition: grid-template-rows var(--dur-3) var(--ease-out), opacity var(--dur-2) var(--ease); }
+.dyn > .dyn-in { overflow: hidden; min-height: 0; }
+.dyn[data-open="false"] { grid-template-rows: 0fr; opacity: 0; }
+
+/* ---- login scene (ported from v2.0) ---- */
+@keyframes m-reveal{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+@keyframes m-drop{from{opacity:0;transform:translateY(-28px)}}
+/* login scene: once, on load */
+.login-hero .sh-bands{animation:m-reveal 1.3s var(--ease-out) backwards}
+.login-hero .sh-seg{animation:m-drop .7s var(--ease-spring) backwards;animation-delay:calc(.45s + var(--i) * 90ms)}
+.login-hero .hero-copy>*{animation:m-rise var(--dur-4) var(--ease-out) backwards;animation-delay:calc(.3s + var(--i, 0) * 80ms)}
+.login-pane .login{animation:m-rise var(--dur-4) var(--ease-out) .1s backwards}
+.login-wrap{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;place-items:stretch;min-height:100dvh;padding:0;background:var(--page)}
+.login-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;min-height:13.5rem;padding:calc(var(--safe-t) + var(--sp-6)) var(--sp-5) var(--sp-5);background:#1c0f08}
+.login-hero .sh{position:absolute;inset:0;z-index:-2;width:100%;height:100%}
+.login-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(0deg,rgba(18,9,4,.88) 0,rgba(18,9,4,.45) 55%,rgba(18,9,4,.1))}
+.hero-copy{max-width:28rem;color:#fff6ee}
+.hero-copy h2{margin:0 0 var(--sp-2);font-size:clamp(1.375rem,1rem + 1.6vw,2.25rem);font-weight:650;line-height:1.1;letter-spacing:-.03em;color:inherit;text-wrap:balance}
+.hero-copy p{margin:0;max-width:26rem;font-size:.9375rem;color:rgba(255,246,238,.84)}
+.hero-tags{display:none;flex-wrap:wrap;gap:.4rem;margin:var(--sp-4) 0 0;padding:0;list-style:none}
+.hero-tags li{padding:.2rem .7rem;font-size:.75rem;font-weight:500;color:#fff6ee;background:rgba(255,246,238,.12);border:1px solid rgba(255,246,238,.24);border-radius:var(--radius-full);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.login-pane{display:grid;place-items:center;padding:var(--sp-5) var(--sp-4) calc(var(--sp-8) + var(--safe-b))}
+.login{width:100%;max-width:26rem;margin:0;padding:var(--sp-6);box-shadow:inset 0 1px 0 var(--surface-hi),var(--shadow-md)}
+@media (max-width:899px){.login{margin-top:calc(var(--sp-8) * -1);position:relative;z-index:1;box-shadow:inset 0 1px 0 var(--surface-hi),var(--shadow-lg)}}
+@media (min-width:900px){
+  .login-wrap{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-content:stretch}
+  .login-hero{min-height:100dvh;padding:var(--sp-10)}
+  .login-hero::after{background:linear-gradient(90deg,rgba(18,9,4,.9) 0,rgba(18,9,4,.5) 45%,rgba(18,9,4,.05))}
+  .hero-tags{display:flex}
+  .login-pane{padding:var(--sp-8)}
 }
+.sh-core { transition: transform .5s var(--ease-out); transform: translate(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px)); }
+.sh-bands { transition: transform .6s var(--ease-out); transform: translate(calc(var(--px, 0) * 6px), calc(var(--py, 0) * 4px)) scale(1.03); transform-origin: center; }
