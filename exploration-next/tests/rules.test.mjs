@@ -1,0 +1,24 @@
+// Unit tests for the declarative form-rule evaluator (js/dyn/rules.js). Run: node tests/rules.test.mjs
+import assert from 'node:assert/strict';
+import { evalCond } from '../src/lib/core/rules.js';
+const vals = { hole_id: 'WKM-DD-0003', downtime_hours: '2', core_len_m: '', flag: true };
+const get = k => vals[k] ?? '';
+const preds = { isDD: g => String(g('hole_id')).includes('-DD-') };
+assert.equal(evalCond(null, get), true);
+assert.equal(evalCond({ field: 'hole_id', eq: 'WKM-DD-0003' }, get), true);
+assert.equal(evalCond({ field: 'hole_id', ne: 'X' }, get), true);
+assert.equal(evalCond({ field: 'hole_id', in: ['A', 'WKM-DD-0003'] }, get), true);
+assert.equal(evalCond({ field: 'downtime_hours', gt: 0 }, get), true);
+assert.equal(evalCond({ field: 'downtime_hours', gt: 2 }, get), false);
+assert.equal(evalCond({ field: 'downtime_hours', gte: 2 }, get), true);
+assert.equal(evalCond({ field: 'downtime_hours', lt: 3 }, get), true);
+assert.equal(evalCond({ field: 'core_len_m', filled: true }, get), false);
+assert.equal(evalCond({ field: 'core_len_m', filled: false }, get), true);
+assert.equal(evalCond({ field: 'missing', gt: 0 }, get), false, 'empty value never passes a numeric test');
+assert.equal(evalCond({ fn: 'isDD' }, get, preds), true);
+assert.equal(evalCond({ fn: 'unknown' }, get, preds), false, 'unknown predicate is false, never throws');
+assert.equal(evalCond({ all: [{ fn: 'isDD' }, { field: 'downtime_hours', gt: 0 }] }, get, preds), true);
+assert.equal(evalCond({ any: [{ field: 'core_len_m', filled: true }, { fn: 'isDD' }] }, get, preds), true);
+assert.equal(evalCond({ not: { fn: 'isDD' } }, get, preds), false);
+assert.equal(evalCond({ field: 'downtime_hours', gt: 1 }, k => k === 'downtime_hours' ? '1,5' : ''), true, 'decimal comma is read as a number');
+console.log('rules tests passed');
