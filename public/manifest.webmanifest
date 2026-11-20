@@ -2,6 +2,8 @@
   "name": "CAN Exploration Data Entry",
   "short_name": "Explo Entry",
   "description": "Offline-first exploration data entry (drill progress and collars)",
+  "id": "/",
+  "lang": "en",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -71,3 +71,12 @@ e2e flow: `npm run build:test`, serve `out-test/` on port 8801, run `tests/e2e.p
 
 ## Update: parameters are edited in the sheet
 Admins and super admins edit the yellow cells of Data QC > Lab Analysis > Parameter directly (28 cells). Four checks the sheet does not list (sample flow days, dip deviation, GPS accuracy) sit in a small form above it. One Save writes all of `exp_setting` `qaqc_thresholds`; the view stays on the Parameter tab and recalculates. The collapsed editor panel was removed.
+
+
+## Phase 5: cutover (prepared, needs your site and phones)
+- `docs/CUTOVER.md`: runbook with the same-address vs new-address decision, domain swap, rollback and retirement.
+- `docs/PHONE_TESTS.md`: checklist for one Android phone and one iPhone, with a result table.
+- `tests/live_smoke.py`: read-only smoke test for the real site (login, every tab, errors, screenshots). Credentials come from environment variables on your own computer.
+- `tests/e2e_sw.py`: service worker takeover (old `exp-pwa-*` cache removed, app opens offline, update toast).
+- The service worker now deletes the old vanilla caches, the app shows "A new version is ready" after a release, and the manifest has a fixed `id`.
+- Do not add a Dexie version above 5 until the old app is retired (a rollback would break on upgraded phones).

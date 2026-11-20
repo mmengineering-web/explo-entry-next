@@ -9,7 +9,7 @@ import { core, openSite, tabsFor, TABS, type Info, type SyncStatus } from "@/lib
 import { useTheme } from "@/lib/ui-state";
 import { Login } from "./login";
 import { BrandMark } from "./brand-mark";
-import { ToastProvider } from "./toast";
+import { ToastProvider, useToast } from "./toast";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./ui/command";
 import { Button } from "./ui/button";
 import { ProgressForm } from "./progress-form";
@@ -36,6 +36,18 @@ const Ico = ({ name, className }: { name: string; className?: string }) => {
   return <C className={className} />;
 };
 
+// A new service worker takes over right after a release. The open page still runs the old code, so ask for a reload.
+function UpdateWatcher() {
+  const toast = useToast();
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) return;   // first install: nothing to replace
+    const on = () => toast("A new version is ready. Close and reopen the app (or reload) to use it.");
+    navigator.serviceWorker.addEventListener("controllerchange", on);
+    return () => navigator.serviceWorker.removeEventListener("controllerchange", on);
+  }, [toast]);
+  return null;
+}
+
 export function AppShell() {
   const [info, setInfo] = useState<Info | null | undefined>(undefined);
   useEffect(() => {
@@ -53,6 +65,7 @@ export function AppShell() {
   if (info === undefined) return <div className="grid min-h-dvh place-items-center text-sm text-muted-foreground" aria-busy>Memuat…</div>;
   return (
     <ToastProvider><ConfirmProvider>
+      <UpdateWatcher />
       {info ? <Main info={info} onLogout={() => setInfo(null)} /> : <Login onDone={setInfo} />}
     </ConfirmProvider></ToastProvider>
   );
