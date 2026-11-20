@@ -40,7 +40,9 @@ export function buildLabSheets({ site, generated, collars, assays, crm, setting,
   add([{ v: 'Parameter Klasifikasi & QAQC', s: 'title' }]); add([{ v: 'Sel KUNING (huruf biru) = input yang boleh diubah. Semua formula di workbook membaca nilai dari sheet ini.', s: 'note' }]);
   add(HDR(['Parameter', 'Nilai', 'Satuan', 'Catatan / dasar']));
   const sec = t => add([{ v: t, s: 'band' }, { s: 'band' }, { s: 'band' }, { s: 'band' }]);
-  const par = (key, label, v, unit, note, st = 'in') => { const r = add([label, { v, s: st }, unit, note ? { v: note, s: 'note' } : '']); P[key] = `Parameter!$B$${r}`; P[key + '_v'] = v; return r; };
+  // pk / pd: which Data QC threshold the cell edits and how the shown value relates to it (stored = shown / pd), used by the in-app editor.
+  const TKEY = { fe_tol: ['fe2o3_tol_pct', 0.01], mc_hi: ['mc_max'], blank: ['blank_ni_max'], pd: ['dup_ard_ni_max.PD'], cd: ['dup_ard_ni_max.CD'], rd: ['dup_ard_ni_max.RD'], zw: ['crm_z_warn'], zf: ['crm_z_fail'], res: ['lab_resolution'], cutoff: ['cutoff_ni'] };
+  const par = (key, label, v, unit, note, st = 'in') => { const [pk, pd] = TKEY[key] || [key, 1]; const r = add([label, { v, s: st, pk, pd }, unit, note ? { v: note, s: 'note' } : '']); P[key] = `Parameter!$B$${r}`; P[key + '_v'] = v; return r; };
   sec('A. Klasifikasi geokimia (berurutan: BRK → RSAP → SAP → CEK → LIM)');
   par('brk_ni', 'BRK: Ni kurang dari', T.brk_ni, '%', 'BRK hanya jika ketiga syarat BRK terpenuhi (AND)');
   par('brk_mgo', 'BRK: MgO lebih dari/sama', T.brk_mgo, '%', 'Batuan ultramafik relatif segar'); par('brk_fe', 'BRK: Fe kurang dari', T.brk_fe, '%', 'Fe rendah, belum terlaterisasi');

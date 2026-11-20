@@ -14,7 +14,8 @@ export function createClient(url, key, opts) {
     q.range = (a, b) => { rows = rows.slice(a, b + 1); return q; };
     q.maybeSingle = async () => ({ data: rows[0] ?? null, error: null });
     q.single = q.maybeSingle;
-    for (const m of ['upsert','update','insert','delete']) q[m] = () => q;
+    for (const m of ['upsert','update','insert','delete']) q[m] = (...a) => { (window.__writes = window.__writes || []).push([table, m, a]); return q; };   // tests read window.__writes
+    
     window.__calls = (window.__calls || []).concat(table);
     return q;
   };

@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, RefreshCw } from "lucide-react";
 import { core, type Info } from "@/lib/boot";
 import { PARAM_SECTIONS, getParam, setParam } from "@/lib/core/lab/params.js";
@@ -52,7 +52,7 @@ export function QcView({ info }: { info: Info }) {
   const R = useMemo(() => (d && Q && T ? Q.analyze(d, T) : null), [d, Q, T]);
 
   if (st.err) return <NeedsOnline what="Data QC" err={st.err} retry={() => load(true)} />;
-  if (st.loading || !d || !R) return <div className="text-sm text-muted-foreground" aria-busy>Loading Data QC…</div>;
+  if (!d || !R) return <div className="text-sm text-muted-foreground" aria-busy>Loading Data QC…</div>;
   const s = R.summary, age = cache ? Math.round((Date.now() - cache.at) / 60000) : 0;
   const crmNi = R.crms.filter((c: any) => c.analyte === "Ni" && c.status !== "n/a"), dupN = R.dups.filter((x: any) => x.ard != null);
 
@@ -186,7 +186,7 @@ function Qaqc({ R, T, d, tk }: { R: any; T: any; d: any; tk: number }) {
 
 function Lab({ d, site, tk, info, T, reload }: { d: any; site: string; tk: number; info: Info; T: any; reload: () => void }) {
   const [model, setModel] = useState<Map<string, any> | null>(null); const [err, setErr] = useState(""); const [sheet, setSheet] = useState(""); const [shown, setShown] = useState(0);
-  const [LV, setLV] = useState<any>(null);
+  const [LV, setLV] = useState<any>(null); const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     (async () => {
       try { const [{ buildLabSheets }, lv] = await Promise.all([import("@/lib/core/lab/workbook.js") as any, import("@/lib/core/qc/labview.js") as any]);
@@ -198,16 +198,16 @@ function Lab({ d, site, tk, info, T, reload }: { d: any; site: string; tk: numbe
   if (err) return <Card><div className="text-sm text-danger">Lab analysis failed: {err}</div></Card>;
   if (!model || !LV) return <Card><p className="text-sm text-muted-foreground">Building lab analysis…</p></Card>;
   const names = [...model.keys()]; const cur = model.get(sheet) ? sheet : names[0]; const sh = model.get(cur); const charts = sh.charts || [];
-  const upto = Math.max(shown, LV.PAGE_CHARTS);
+  const upto = Math.max(shown, LV.PAGE_CHARTS); const editing = !!info.can_admin && !info.guest && cur === "Parameter";
   return (
     <Card id="q-lab-card"><CardTitle>Lab analysis</CardTitle>
-      <p className="text-sm text-muted-foreground">The same {names.length} sheets as the Excel download, computed from your data. Charts, heat-map colours and PASS / FAIL colours match the workbook. {info.can_admin ? "Admins and super admins can change the parameters below; every sheet, chart and the Excel download recalculate." : "Limits come from the Parameter sheet; an admin or super admin can change them."}</p>
-      {info.can_admin && !info.guest && <ParamEditor T={T} reload={reload} />}
+      <p className="text-sm text-muted-foreground">The same {names.length} sheets as the Excel download, computed from your data. Charts, heat-map colours and PASS / FAIL colours match the workbook. {info.can_admin && !info.guest ? "Admins and super admins can change every limit by editing the yellow cells on the Parameter tab; all sheets, charts and the Excel download recalculate." : "Limits come from the Parameter sheet; an admin or super admin can change them."}</p>
       <div id="lab-pick" className="flex flex-wrap gap-1.5">{names.map(n => <button key={n} data-n={n} onClick={() => { setSheet(n); setShown(0); }} className={cn("h-8 rounded-full border px-3 text-sm", n === cur ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-accent")}>{n.replace(/_/g, " ")}</button>)}</div>
+      {editing && <ParamBar T={T} reload={reload} box={box} />}
       <div id="lab-charts" className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{charts.slice(0, upto).map((sp: any, i: number) => <LabChart key={`${cur}${i}${tk}`} sp={sp} model={model} here={sh.name} LV={LV} />)}</div>
       {upto < charts.length && <div><Button size="sm" variant="outline" onClick={() => setShown(upto + LV.PAGE_CHARTS)}>Show more charts ({upto} of {charts.length})</Button></div>}
       {/* the table markup is built by tableHtml() with every cell value escaped */}
-      <div id="lab-table" className="max-h-[70vh] overflow-auto" dangerouslySetInnerHTML={{ __html: LV.tableHtml(sh) }} />
+      <div id="lab-table" ref={box} className="max-h-[70vh] overflow-auto" dangerouslySetInnerHTML={{ __html: LV.tableHtml(sh, { edit: editing }) }} />
     </Card>
   );
 }
@@ -243,11 +243,13 @@ function Thr({ T, d }: { T: any; d: any }) {
   );
 }
 
-function ParamEditor({ T, reload }: { T: any; reload: () => void }) {
+const EXTRA_KEYS: any[] = (PARAM_SECTIONS.find((x: any) => x.title.startsWith("E.")) as any).items;
+// Editing happens in the yellow cells of the Parameter sheet itself. Four checks that the sheet does not list sit in a small form below.
+function ParamBar({ T, reload, box }: { T: any; reload: () => void; box: React.RefObject<HTMLDivElement | null> }) {
   const toast = useToast(); const ask = useConfirm(); const [busy, setBusy] = useState(false);
-  const init = () => Object.fromEntries(PARAM_SECTIONS.flatMap(sec => sec.items.map(([k, , , , , , sc]: any) => [k, String(Math.round(getParam(T, k) * (sc || 1) * 1e6) / 1e6)])));
-  const [v, setV] = useState<Record<string, string>>(init);
-  useEffect(() => { setV(init()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [T]);
+  const initX = () => Object.fromEntries(EXTRA_KEYS.map(([k]: any) => [k, String(getParam(T, k))]));
+  const [x, setX] = useState<Record<string, string>>(initX);
+  useEffect(() => { setX(initX()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [T]);
   async function write(value: any, done: string) {
     setBusy(true);
     try {
@@ -256,12 +258,17 @@ function ParamEditor({ T, reload }: { T: any; reload: () => void }) {
       toast(done); cache = null; reload();
     } catch (e: any) { toast(e.message || String(e), "err"); } finally { setBusy(false); }
   }
-  function save(e: React.FormEvent) {
-    e.preventDefault(); const out: any = {};
-    for (const sec of PARAM_SECTIONS) for (const [k, label, , min, max, , sc] of sec.items as any[]) {
-      const raw = (v[k] ?? "").trim(), n = Number(raw);
-      if (raw === "" || Number.isNaN(n) || n < min || n > max) return toast(`${label}: enter a number from ${min} to ${max}.`, "err");
-      setParam(out, k, n / (sc || 1));
+  function save() {
+    const raw = new Map<string, string>();   // threshold key -> value in stored units, as text
+    box.current?.querySelectorAll<HTMLInputElement>("input[data-pk]").forEach(el => {
+      const pd = Number(el.dataset.pd) || 1, t = el.value.trim(); raw.set(el.dataset.pk!, t === "" ? "" : String(Math.round((Number(t) / pd) * 1e6) / 1e6));
+    });
+    for (const [k] of EXTRA_KEYS) raw.set(k, (x[k] ?? "").trim());
+    const out: any = {};
+    for (const [k, label, , min, max, , sc] of PARAM_SECTIONS.flatMap((g: any) => g.items as any[])) {
+      const t = raw.get(k), n = Number(t), lo = min / (sc || 1), hi = max / (sc || 1);
+      if (t === undefined || t === "" || Number.isNaN(n) || n < lo || n > hi) return toast(`${label}: enter a number from ${lo} to ${hi}.`, "err");
+      setParam(out, k, n);
     }
     if (out.crm_z_warn >= out.crm_z_fail) return toast("CRM warning |Z| must be below the fail |Z|.", "err");
     if (out.sent_warn_days > out.sent_fail_days) return toast("Sent warning days must not exceed the critical days.", "err");
@@ -270,24 +277,23 @@ function ParamEditor({ T, reload }: { T: any; reload: () => void }) {
   }
   async function reset() { if (await ask("Reset every parameter to the built-in defaults for this site?", { title: "Reset parameters?", ok: "Reset", danger: true })) write({}, "Parameters reset to defaults"); }
   return (
-    <details id="q-params" className="rounded-lg border bg-muted/40 p-3">
-      <summary className="cursor-pointer select-none text-sm font-semibold">Parameters (admin and super admin)</summary>
-      <form onSubmit={save} className="mt-3 flex flex-col gap-4">
-        {PARAM_SECTIONS.map(sec => (
-          <fieldset key={sec.title} className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">{sec.title}</legend>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {(sec.items as any[]).map(([k, label, unit, min, max, step]) => (
-                <label key={k} className="flex flex-col gap-1 text-xs text-muted-foreground">{label}{unit ? ` (${unit})` : ""}
-                  <Input name={k} type="number" inputMode="decimal" min={min} max={max} step={step} value={v[k] ?? ""} onChange={e => setV(o => ({ ...o, [k]: e.target.value }))} className="h-9 text-foreground" />
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        ))}
-        <p className="text-xs text-muted-foreground">Saved for this site only (exp_setting, key qaqc_thresholds). CRM certificate values stay in the exp_crm table. The Excel workbook downloaded afterwards carries the new values in its yellow Parameter cells.</p>
-        <div className="flex flex-wrap gap-2"><Button type="submit" size="sm" id="q-params-save" disabled={busy || !navigator.onLine}>Save parameters</Button><Button type="button" size="sm" variant="outline" id="q-params-reset" onClick={reset} disabled={busy || !navigator.onLine}>Reset to defaults</Button></div>
-      </form>
-    </details>
+    <div id="q-params" className="flex flex-col gap-3 rounded-lg border bg-muted/40 p-3">
+      <p className="text-sm"><b>Editing is on.</b> Change the yellow cells in the table below, then save. Admins and super admins only; saved for this site.</p>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1 text-sm font-medium">Also adjustable (not shown on the sheet): sample flow and survey checks</legend>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {EXTRA_KEYS.map(([k, label, unit, min, max, step]: any) => (
+            <label key={k} className="flex flex-col gap-1 text-xs text-muted-foreground">{label}{unit ? ` (${unit})` : ""}
+              <Input name={k} type="number" inputMode="decimal" min={min} max={max} step={step} value={x[k] ?? ""} onChange={e => setX(o => ({ ...o, [k]: e.target.value }))} className="h-9 text-foreground" />
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <p className="text-xs text-muted-foreground">CRM certificate values come from the exp_crm table and are not edited here. The Excel workbook downloaded afterwards carries the new values in its yellow Parameter cells.</p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" size="sm" id="q-params-save" onClick={save} disabled={busy || !navigator.onLine}>Save parameters</Button>
+        <Button type="button" size="sm" variant="outline" id="q-params-reset" onClick={reset} disabled={busy || !navigator.onLine}>Reset to defaults</Button>
+      </div>
+    </div>
   );
 }

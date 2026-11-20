@@ -67,3 +67,7 @@ e2e flow: `npm run build:test`, serve `out-test/` on port 8801, run `tests/e2e.p
 - three.js and react-three-fiber load only when the tab opens in 3D (lazy chunk, precached by the service worker).
 - Code: `src/lib/core/geo3d.js` (pure geometry), `src/components/drill3d-view.tsx`, `drill3d-scene.tsx`. Tests: `tests/geo3d.test.mjs`, `tests/e2e_3d.py`.
 - The display-density switch was removed.
+
+
+## Update: parameters are edited in the sheet
+Admins and super admins edit the yellow cells of Data QC > Lab Analysis > Parameter directly (28 cells). Four checks the sheet does not list (sample flow days, dip deviation, GPS accuracy) sit in a small form above it. One Save writes all of `exp_setting` `qaqc_thresholds`; the view stays on the Parameter tab and recalculates. The collapsed editor panel was removed.

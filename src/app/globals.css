@@ -235,6 +235,9 @@ label:has(:required) > .lbl::before { content: ""; display: inline-block; width:
 .lab-tbl td.lt-band,.lab-tbl td.lt-bold{font-weight:600;background:var(--muted)}
 .lab-tbl td.lt-in,.lab-tbl td.lt-in1,.lab-tbl td.lt-in2,.lab-tbl td.lt-in3,.lab-tbl td.lt-inpct{background:#fff2cc;color:#0000ff}
 .lab-tbl td.lt-e{border:0}
+.lab-tbl input.lab-in{width:6.5rem;height:1.9rem;padding:0 .4rem;text-align:right;font:inherit;color:#0000ff;background:#fff2cc;border:1px solid #c9a227;border-radius:4px}
+.lab-tbl input.lab-in:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.lab-tbl td.lt-in:has(input),.lab-tbl td.lt-in1:has(input),.lab-tbl td.lt-in2:has(input),.lab-tbl td.lt-in3:has(input){padding:.15rem .3rem}
 
 /* Peta */
 .mp-tag{display:inline-block;margin-left:4px;padding:0 .5rem;font-size:.6875rem;font-weight:600;border:2px solid;border-radius:var(--radius-full)}

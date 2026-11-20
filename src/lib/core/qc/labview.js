@@ -47,7 +47,7 @@ export function chartConfig(sp, model, here) {
   return { type: sp.type, data: { labels, datasets }, options: { ...base, scales: { x: { grid: { display: false }, ticks: { ...tick, maxRotation: 45, autoSkipPadding: 10 }, title: sp.x?.title ? { display: true, text: sp.x.title, color: ink } : undefined }, y: axis(sp.y, { beginAtZero: sp.y?.min === 0 }) } } };
 }
 
-export function tableHtml(sh) {
+export function tableHtml(sh, opt = {}) {
   const rows = sh.rows, n = Math.min(rows.length, MAX_ROWS + 6); let ncol = 0; rows.forEach(r => { if (r && r.length > ncol) ncol = r.length; });
   const heat = new Map(), cfc = new Map();
   (sh.scale || []).forEach(g => { const r = parseRange(g.sqref); if (!r) return; const vs = []; for (let i = r.r1; i <= r.r2; i++) for (let j = r.c1; j <= r.c2; j++) { const v = num(cellVal(rows[i - 1]?.[j])); if (v != null) vs.push(v); }
@@ -62,6 +62,7 @@ export function tableHtml(sh) {
       const txt = esc(fmt(c)), st = heat.get(k) || cfc.get(k) || '';
       if (s === 'title') { h += `<td class="lt-title" colspan="${ncol}">${txt}</td>`; break; }
       if (s === 'note' && j === 0) { h += `<td class="lt-note" colspan="${ncol}">${txt}</td>`; break; }
+      if (opt.edit && o?.pk) { h += `<td class="lt-${s} lt-n"><input class="lab-in" type="number" step="any" data-pk="${esc(o.pk)}" data-pd="${Number(o.pd) || 1}" value="${esc(String(o.v ?? ''))}" aria-label="${esc(fmt(r[0]))}"></td>`; continue; }
       h += `<td class="lt-${s || 'x'}${typeof cellVal(c) === 'number' ? ' lt-n' : w}"${st ? ` style="${st}"` : ''}>${txt}</td>`; }
     h += '</tr>'; }
   return h + '</tbody></table>' + (rows.length > n ? `<p class="muted small">First ${n} rows shown. The Excel download has all ${rows.length}.</p>` : '');
