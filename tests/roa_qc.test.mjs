@@ -78,3 +78,14 @@ assert.equal(String.fromCharCode(u8[0], u8[1]), 'PK'); assert.ok(u8.length > 200
 const empty = buildLabWorkbook({ site: 'T', generated: 'x', collars: [], assays: [], crm: [], setting: null, utm: null });
 assert.ok(empty.length > 1000, 'empty site still builds');
 console.log('roa/qc tests passed');
+
+// parameters edited by an admin (exp_setting qaqc_thresholds) change the classification and the workbook's Parameter sheet
+{
+  const T2 = Q.thresholds({ brk_ni: 1.5, sap_mgo: 15 });
+  assert.equal(Q.classify(1.2, 5, 35, T2), 'BRK');           // Ni 1.2 is below the raised BRK limit
+  assert.notEqual(Q.classify(1.2, 5, 35, T2), Q.classify(1.2, 5, 35));
+  assert.equal(Q.classify(0.5, 30, 12, T2), 'LIM');          // MgO 12 is below the raised SAP limit
+  assert.equal(Q.classify(0.5, 30, 12), 'SAP');
+  assert.equal(Q.thresholds({}).brk_ni, 0.8);
+  console.log('param override tests passed');
+}

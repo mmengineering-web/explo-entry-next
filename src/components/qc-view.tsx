@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, RefreshCw } from "lucide-react";
 import { core, type Info } from "@/lib/boot";
+import { PARAM_SECTIONS, getParam, setParam } from "@/lib/core/lab/params.js";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardTitle } from "./ui/card";
 import { ChartCard, Kpi, loadChartJs, useThemeKey, type ChartSpec } from "./chart-card";
 import { NeedsOnline } from "./dashboard-view";
+import { useToast } from "./toast";
+import { useConfirm } from "./confirm";
 
 const STALE = 2 * 60 * 1000;
 let cache: { site: string; data: any; at: number } | null = null;
@@ -93,7 +96,7 @@ export function QcView({ info }: { info: Info }) {
       </div>
       {sub === "geo" && <Geo R={R} />}
       {sub === "qaqc" && <Qaqc R={R} T={T} d={d} tk={tk} />}
-      {sub === "lab" && <Lab d={d} site={info.site} tk={tk} />}
+      {sub === "lab" && <Lab d={d} site={info.site} tk={tk} info={info} T={T} reload={() => load(true)} />}
       {sub === "thr" && <Thr T={T} d={d} />}
     </div>
   );
@@ -181,7 +184,7 @@ function Qaqc({ R, T, d, tk }: { R: any; T: any; d: any; tk: number }) {
   );
 }
 
-function Lab({ d, site, tk }: { d: any; site: string; tk: number }) {
+function Lab({ d, site, tk, info, T, reload }: { d: any; site: string; tk: number; info: Info; T: any; reload: () => void }) {
   const [model, setModel] = useState<Map<string, any> | null>(null); const [err, setErr] = useState(""); const [sheet, setSheet] = useState(""); const [shown, setShown] = useState(0);
   const [LV, setLV] = useState<any>(null);
   useEffect(() => {
@@ -198,7 +201,8 @@ function Lab({ d, site, tk }: { d: any; site: string; tk: number }) {
   const upto = Math.max(shown, LV.PAGE_CHARTS);
   return (
     <Card id="q-lab-card"><CardTitle>Lab analysis</CardTitle>
-      <p className="text-sm text-muted-foreground">The same {names.length} sheets as the Excel download, computed from your data. Charts, heat-map colours and PASS / FAIL colours match the workbook. Limits come from the Parameter sheet (edit them in Excel).</p>
+      <p className="text-sm text-muted-foreground">The same {names.length} sheets as the Excel download, computed from your data. Charts, heat-map colours and PASS / FAIL colours match the workbook. {info.can_admin ? "Admins and super admins can change the parameters below; every sheet, chart and the Excel download recalculate." : "Limits come from the Parameter sheet; an admin or super admin can change them."}</p>
+      {info.can_admin && !info.guest && <ParamEditor T={T} reload={reload} />}
       <div id="lab-pick" className="flex flex-wrap gap-1.5">{names.map(n => <button key={n} data-n={n} onClick={() => { setSheet(n); setShown(0); }} className={cn("h-8 rounded-full border px-3 text-sm", n === cur ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:bg-accent")}>{n.replace(/_/g, " ")}</button>)}</div>
       <div id="lab-charts" className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{charts.slice(0, upto).map((sp: any, i: number) => <LabChart key={`${cur}${i}${tk}`} sp={sp} model={model} here={sh.name} LV={LV} />)}</div>
       {upto < charts.length && <div><Button size="sm" variant="outline" onClick={() => setShown(upto + LV.PAGE_CHARTS)}>Show more charts ({upto} of {charts.length})</Button></div>}
@@ -227,14 +231,63 @@ function Thr({ T, d }: { T: any; d: any }) {
     ["Sample sent, no result", `${T.sent_warn_days} / ${T.sent_fail_days} days`, "Warning after 7 days, critical after 14: chase the lab."],
     ["Dip deviation (collar vs survey)", `${T.dip_dev_warn}°`, "A survey dip far from the collar dip often means a wrong sign or a mistyped value."],
     ["GPS accuracy", `${T.gps_warn_m} m`, "Collar position worse than this is flagged."],
-    ["Ni cut-off", `${T.cutoff_ni} %`, "Used for ore composites in the lab-analysis workbook."],
+    ["Ni cut-off", `${T.cutoff_ni} %`, "Used for ore composites in the lab-analysis workbook. All limits, plus the classification and IDW settings, are edited by admins in Lab Analysis."],
   ];
   return (
     <Card id="q-thr"><CardTitle>Thresholds in use</CardTitle>
       <p className="text-sm text-muted-foreground">Source: {src}. They follow the TPB lab-analysis workbook (Parameter sheet): CRM by Z-score against the certificate, duplicates by relative difference (ARD), blank by an absolute Ni limit.</p>
       <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr><Th>Check</Th><Th>Limit</Th><Th>Why</Th></tr></thead><tbody>{rows.map(r => <tr key={r[0]}><Td>{r[0]}</Td><Td><b>{r[1]}</b></Td><Td>{r[2]}</Td></tr>)}</tbody></table></div>
-      <p className="text-xs text-muted-foreground"><b>Classification</b> (in order): BRK Ni&lt;0.8 and MgO≥30 and Fe&lt;10; RSAP MgO≥20 and Fe&lt;15; SAP MgO≥10, or Fe&lt;25 with MgO≥5; CEK Fe&lt;25 and MgO&lt;5; otherwise LIM.</p>
+      <p className="text-xs text-muted-foreground"><b>Classification</b> (in order): BRK Ni&lt;{T.brk_ni} and MgO≥{T.brk_mgo} and Fe&lt;{T.brk_fe}; RSAP MgO≥{T.rsap_mgo} and Fe&lt;{T.rsap_fe}; SAP MgO≥{T.sap_mgo}, or Fe&lt;{T.sap_fe} with MgO≥{T.sap_mgo_min}; CEK Fe&lt;{T.sap_fe} and MgO&lt;{T.sap_mgo_min}; otherwise LIM.</p>
       <p className="text-xs text-muted-foreground"><b>CRM certificate values</b> ({d.crm.length} rows in the site table): {[...new Set(d.crm.map((c: any) => c.crm_name))].join(", ") || "none"}. Admins edit them in Supabase (table exp_crm). Never use the OREAS 182 certificate for 182b.</p>
     </Card>
+  );
+}
+
+function ParamEditor({ T, reload }: { T: any; reload: () => void }) {
+  const toast = useToast(); const ask = useConfirm(); const [busy, setBusy] = useState(false);
+  const init = () => Object.fromEntries(PARAM_SECTIONS.flatMap(sec => sec.items.map(([k, , , , , , sc]: any) => [k, String(Math.round(getParam(T, k) * (sc || 1) * 1e6) / 1e6)])));
+  const [v, setV] = useState<Record<string, string>>(init);
+  useEffect(() => { setV(init()); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [T]);
+  async function write(value: any, done: string) {
+    setBusy(true);
+    try {
+      const { S } = await core(); const { error } = await S.getClient().from("exp_setting").upsert({ key: "qaqc_thresholds", value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      if (error) throw new Error(error.message);
+      toast(done); cache = null; reload();
+    } catch (e: any) { toast(e.message || String(e), "err"); } finally { setBusy(false); }
+  }
+  function save(e: React.FormEvent) {
+    e.preventDefault(); const out: any = {};
+    for (const sec of PARAM_SECTIONS) for (const [k, label, , min, max, , sc] of sec.items as any[]) {
+      const raw = (v[k] ?? "").trim(), n = Number(raw);
+      if (raw === "" || Number.isNaN(n) || n < min || n > max) return toast(`${label}: enter a number from ${min} to ${max}.`, "err");
+      setParam(out, k, n / (sc || 1));
+    }
+    if (out.crm_z_warn >= out.crm_z_fail) return toast("CRM warning |Z| must be below the fail |Z|.", "err");
+    if (out.sent_warn_days > out.sent_fail_days) return toast("Sent warning days must not exceed the critical days.", "err");
+    if (out.al_mid > out.al_hi || out.cr_mid > out.cr_hi) return toast("Medium limits must not exceed the high limits.", "err");
+    write(out, "Parameters saved");
+  }
+  async function reset() { if (await ask("Reset every parameter to the built-in defaults for this site?", { title: "Reset parameters?", ok: "Reset", danger: true })) write({}, "Parameters reset to defaults"); }
+  return (
+    <details id="q-params" className="rounded-lg border bg-muted/40 p-3">
+      <summary className="cursor-pointer select-none text-sm font-semibold">Parameters (admin and super admin)</summary>
+      <form onSubmit={save} className="mt-3 flex flex-col gap-4">
+        {PARAM_SECTIONS.map(sec => (
+          <fieldset key={sec.title} className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{sec.title}</legend>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {(sec.items as any[]).map(([k, label, unit, min, max, step]) => (
+                <label key={k} className="flex flex-col gap-1 text-xs text-muted-foreground">{label}{unit ? ` (${unit})` : ""}
+                  <Input name={k} type="number" inputMode="decimal" min={min} max={max} step={step} value={v[k] ?? ""} onChange={e => setV(o => ({ ...o, [k]: e.target.value }))} className="h-9 text-foreground" />
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))}
+        <p className="text-xs text-muted-foreground">Saved for this site only (exp_setting, key qaqc_thresholds). CRM certificate values stay in the exp_crm table. The Excel workbook downloaded afterwards carries the new values in its yellow Parameter cells.</p>
+        <div className="flex flex-wrap gap-2"><Button type="submit" size="sm" id="q-params-save" disabled={busy || !navigator.onLine}>Save parameters</Button><Button type="button" size="sm" variant="outline" id="q-params-reset" onClick={reset} disabled={busy || !navigator.onLine}>Reset to defaults</Button></div>
+      </form>
+    </details>
   );
 }

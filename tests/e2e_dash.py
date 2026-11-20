@@ -7,9 +7,10 @@ CHROME = os.environ.get('CHROME'); fails = []
 def check(n, c, extra=''):
     print(('PASS ' if c else 'FAIL ') + n + (' ' + str(extra) if extra and not c else ''))
     if not c: fails.append(n)
-def mk(p, w=1360, h=900):
+def mk(p, w=1360, h=900, role=None):
     b = p.chromium.launch(**({'executable_path': CHROME, 'args': ['--no-sandbox']} if CHROME else {}))
     ctx = b.new_context(viewport={'width': w, 'height': h}, service_workers='block', accept_downloads=True)
+    if role: ctx.add_init_script(f"window.__role='{role}'")
     pg = ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.on('console', lambda m: errs.append(m.text) if m.type == 'error' and 'Failed to load resource' not in m.text else None)
@@ -102,14 +103,35 @@ with sync_playwright() as p:
     with pg.expect_download(timeout=60000) as dl: pg.click('#d-pdf')
     dl.value.save_as('/tmp/dash.pdf'); head = open('/tmp/dash.pdf', 'rb').read(5); size = os.path.getsize('/tmp/dash.pdf')
     check('dashboard pdf is a pdf with content', head == b'%PDF-' and size > 20000, size)
+    # ---- Import Data: the Excel card and the RoA card sit side by side, same size, buttons on one line
+    go(pg, 'import', '#roa-card')
+    a, r = pg.locator('#imp-card').bounding_box(), pg.locator('#roa-card').bounding_box()
+    check('import cards are parallel (same top, same height, side by side)', abs(a['y'] - r['y']) < 2 and abs(a['height'] - r['height']) < 2 and r['x'] > a['x'] + a['width'] - 2, (a, r))
+    fa, fr = pg.locator('#imp-file').locator('xpath=..').bounding_box(), pg.locator('#roa-file').locator('xpath=..').bounding_box()
+    check('import buttons are aligned (same height, same bottom)', abs(fa['height'] - fr['height']) < 1 and abs((fa['y'] + fa['height']) - (fr['y'] + fr['height'])) < 2, (fa, fr))
+    check('one Import tab, no separate RoA tab', pg.locator('aside button[data-t=roa]').count() == 0 and pg.locator('aside button[data-t=import]').count() == 1)
+    pg.screenshot(path=f'{SHOTS}/import_d.png')
     # ---- RoA Lab (a PDF that is not a lab report must be refused with a clear message, proving pdf.js runs)
     from reportlab.pdfgen import canvas
     c = canvas.Canvas('/tmp/notroa.pdf'); c.drawString(72, 700, 'Hello, this is not a lab report'); c.save()
-    go(pg, 'roa', '#roa h2'); pg.set_input_files('#roa-file', '/tmp/notroa.pdf'); pg.wait_for_selector('#roa-msg .msg.err', timeout=20000)
+    go(pg, 'import', '#roa-card'); pg.set_input_files('#roa-file', '/tmp/notroa.pdf'); pg.wait_for_selector('#roa-msg:has-text("Tabel hasil")', timeout=20000)
     check('roa refuses a non-report pdf', 'Tabel hasil' in pg.inner_text('#roa-msg'), pg.inner_text('#roa-msg'))
     errs = [e for e in errs if 'Tabel hasil tidak ditemukan' not in e]   # logged on purpose by the RoA view for the refused test PDF
     check('no console errors', not errs, errs[:3])
+    # ---- Lab Analysis parameters: geologist cannot edit, site admin can
+    go(pg, 'qc', '#qc'); pg.click('#q-sub button[data-s=lab]'); pg.wait_for_selector('#lab-pick button', timeout=20000)
+    check('geologist has no parameter editor', pg.locator('#q-params').count() == 0)
     b.close()
+    b, pg, errs = mk(p, role='siteadmin'); login(pg)
+    go(pg, 'qc', '#qc'); pg.click('#q-sub button[data-s=lab]'); pg.wait_for_selector('#q-params', timeout=20000)
+    pg.click('#q-params summary'); pg.wait_for_selector('#q-params input[name=brk_ni]')
+    check('parameter editor lists all sections', pg.locator('#q-params fieldset').count() == 6 and pg.locator('#q-params input').count() == 32, pg.locator('#q-params input').count())
+    check('editor starts at the defaults', pg.input_value('#q-params input[name=brk_ni]') == '0.8' and pg.input_value('#q-params input[name="dup_ard_ni_max.PD"]') == '5')
+    pg.fill('#q-params input[name=crm_z_warn]', '5'); pg.click('#q-params-save'); pg.wait_for_timeout(500)
+    check('invalid combination is refused (warn must be below fail)', pg.locator('text=must be below the fail').count() >= 1)
+    pg.fill('#q-params input[name=crm_z_warn]', '2'); pg.fill('#q-params input[name=brk_ni]', '1'); pg.click('#q-params-save'); pg.wait_for_timeout(1000)
+    check('admin can save parameters', pg.locator('text=Parameters saved').count() >= 1)
+    pg.screenshot(path=f'{SHOTS}/params_d.png', full_page=True); b.close()
     # ---- phone
     b, pg, errs = mk(p, 390, 800); login(pg)
     pg.click('button[aria-label=Lainnya]'); pg.wait_for_timeout(400)

@@ -53,3 +53,8 @@ e2e flow: `npm run build:test`, serve `out-test/` on port 8801, run `tests/e2e.p
 - shadcn registry was unreachable, so components are hand-written with the same token names. `npx shadcn add` still works later.
 - Tested only in headless Chrome with a fake Supabase. No real Supabase, live data or real phone yet.
 - Never commit API keys. Supabase URL and anon key come from `src/lib/core/config.js` per site, as in v2.0.0.
+
+
+## Update: Import Data tab and editable lab parameters
+- The separate RoA Lab tab is gone. **Import Data** now holds two cards side by side: Import Drillhole Data (template download, Excel file) and Import RoA Lab (Nama lab, RoA PDF). Buttons are aligned on one row.
+- Lab Analysis parameters (classification, laterite, consistency, QAQC, sample flow, ore cut-off, IDW) are editable by admin and super admin in Data QC > Lab Analysis > Parameters. Values are saved in `exp_setting` key `qaqc_thresholds`; Reset restores defaults. Every sheet, chart and the Excel download recalculate. Defaults live in `src/lib/core/qc/calc.js`, the form layout in `src/lib/core/lab/params.js`.

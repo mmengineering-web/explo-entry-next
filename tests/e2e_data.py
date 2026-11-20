@@ -112,7 +112,7 @@ with sync_playwright() as p:
     for t, sel in [('report', '#r-text'), ('list', '[id="rl-d:all"]'), ('import', '#tpl-dl'), ('admin', '#subnav')]:
         pg.goto(BASE + '/'); pg.wait_for_selector('#f'); pg.wait_for_timeout(800)
         pg.click('button[aria-label=Lainnya]'); pg.wait_for_selector('[cmdk-item]')
-        pg.click('[cmdk-item]:has-text("%s")' % {'report': 'Laporan', 'list': 'Data Records', 'import': 'Import', 'admin': 'Pengaturan'}[t])
+        pg.click('[cmdk-item]:has-text("%s")' % {'report': 'Laporan', 'list': 'Data Records', 'import': 'Import Data', 'admin': 'Pengaturan'}[t])
         pg.wait_for_selector(sel); pg.wait_for_timeout(700)
         check(f'phone no page-level overflow on {t}', pg.evaluate(noh))
     pg.screenshot(path=f'{SHOTS}/admin_m.png')

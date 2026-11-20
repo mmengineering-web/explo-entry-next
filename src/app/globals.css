@@ -296,11 +296,3 @@ html[data-density="compact"] { --control-h: 2.25rem; --control-h-sm: 1.875rem; -
 .mapx .sw{display:inline-block;width:1rem;height:1rem;border-radius:3px;flex:none}
 .mapx .mp table td{padding:0 .5rem 0 0}.mapx .mp-r.muted{color:var(--muted-foreground)}
 #map{min-height:70vh;border-radius:var(--radius-xl);overflow:hidden;position:relative}
-
-/* RoA Lab (plain-JS view) */
-.roax .tbl{width:100%;font-size:.8125rem;border-collapse:collapse}.roax .tbl th,.roax .tbl td{padding:.3rem .5rem;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-.roax .tbl th{position:sticky;top:0;background:var(--muted)}
-.roax tr.roa-warn td{background:var(--warning-bg)}.roax tr.roa-skip td{color:var(--muted-foreground);background:var(--muted)}
-.roax label.btn input{display:none}
-.roax .row.actions{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
-.roax h2,.roax h3{margin:0;font-weight:600}

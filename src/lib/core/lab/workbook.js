@@ -42,14 +42,14 @@ export function buildLabSheets({ site, generated, collars, assays, crm, setting,
   const sec = t => add([{ v: t, s: 'band' }, { s: 'band' }, { s: 'band' }, { s: 'band' }]);
   const par = (key, label, v, unit, note, st = 'in') => { const r = add([label, { v, s: st }, unit, note ? { v: note, s: 'note' } : '']); P[key] = `Parameter!$B$${r}`; P[key + '_v'] = v; return r; };
   sec('A. Klasifikasi geokimia (berurutan: BRK → RSAP → SAP → CEK → LIM)');
-  par('brk_ni', 'BRK: Ni kurang dari', 0.8, '%', 'BRK hanya jika ketiga syarat BRK terpenuhi (AND)');
-  par('brk_mgo', 'BRK: MgO lebih dari/sama', 30, '%', 'Batuan ultramafik relatif segar'); par('brk_fe', 'BRK: Fe kurang dari', 10, '%', 'Fe rendah, belum terlaterisasi');
-  par('rsap_mgo', 'RSAP: MgO lebih dari/sama', 20, '%', 'Rocky saprolite (AND)'); par('rsap_fe', 'RSAP: Fe kurang dari', 15, '%');
-  par('sap_fe', 'SAP: Fe kurang dari', 25, '%', 'SAP jika Fe < nilai ini DAN MgO ≥ batas bawah, ATAU MgO ≥ batas SAP'); par('sap_mgo', 'SAP: MgO lebih dari/sama', 10, '%', 'Sisanya (Fe ≥ 25 dan MgO < 10) = LIM');
-  par('sap_mgo_min', 'SAP via Fe rendah: MgO minimal', 5, '%', 'Fe < 25 tapi MgO < nilai ini = "CEK" (dilusi SiO2/Al2O3)');
+  par('brk_ni', 'BRK: Ni kurang dari', T.brk_ni, '%', 'BRK hanya jika ketiga syarat BRK terpenuhi (AND)');
+  par('brk_mgo', 'BRK: MgO lebih dari/sama', T.brk_mgo, '%', 'Batuan ultramafik relatif segar'); par('brk_fe', 'BRK: Fe kurang dari', T.brk_fe, '%', 'Fe rendah, belum terlaterisasi');
+  par('rsap_mgo', 'RSAP: MgO lebih dari/sama', T.rsap_mgo, '%', 'Rocky saprolite (AND)'); par('rsap_fe', 'RSAP: Fe kurang dari', T.rsap_fe, '%');
+  par('sap_fe', 'SAP: Fe kurang dari', T.sap_fe, '%', 'SAP jika Fe < nilai ini DAN MgO ≥ batas bawah, ATAU MgO ≥ batas SAP'); par('sap_mgo', 'SAP: MgO lebih dari/sama', T.sap_mgo, '%', 'Sisanya (Fe ≥ 25 dan MgO < 10) = LIM');
+  par('sap_mgo_min', 'SAP via Fe rendah: MgO minimal', T.sap_mgo_min, '%', 'Fe < 25 tapi MgO < nilai ini = "CEK" (dilusi SiO2/Al2O3)');
   sec('B. Indikasi laterit (Al2O3 & Cr2O3)');
-  par('al_hi', 'Al2O3 tinggi (≥)', 8, '%'); par('al_mid', 'Al2O3 sedang (≥)', 4, '%'); par('cr_hi', 'Cr2O3 tinggi (≥)', 2, '%'); par('cr_mid', 'Cr2O3 sedang (≥)', 1, '%');
-  par('cr_vhi', 'Cr2O3 sangat tinggi (≥)', 4, '%', 'Flag kemungkinan kromit'); par('al_vhi', 'Al2O3 sangat tinggi (≥)', 15, '%', 'Flag clay/ferricrete');
+  par('al_hi', 'Al2O3 tinggi (≥)', T.al_hi, '%'); par('al_mid', 'Al2O3 sedang (≥)', T.al_mid, '%'); par('cr_hi', 'Cr2O3 tinggi (≥)', T.cr_hi, '%'); par('cr_mid', 'Cr2O3 sedang (≥)', T.cr_mid, '%');
+  par('cr_vhi', 'Cr2O3 sangat tinggi (≥)', T.cr_vhi, '%', 'Flag kemungkinan kromit'); par('al_vhi', 'Al2O3 sangat tinggi (≥)', T.al_vhi, '%', 'Flag clay/ferricrete');
   sec('C. Cek konsistensi data');
   par('fe_tol', 'Toleransi Fe vs Fe2O3/1.4297', T.fe2o3_tol_pct / 100, 'relatif', 'Fe2O3 = Fe × 1.4297; deviasi > toleransi di-flag', 'in3'); par('mc_hi', 'MC tinggi (≥)', T.mc_max, '%');
   sec('D. QAQC');
@@ -68,8 +68,8 @@ export function buildLabSheets({ site, generated, collars, assays, crm, setting,
   add([{ v: `CRM yang dipakai: ${crmName}. Jangan memakai sertifikat OREAS 182 (tanpa "b") untuk 182b.`, s: 'note' }]);
   sec('F. Komposit ore'); par('cutoff', 'Cut-off Ni (≥)', T.cutoff_ni, '%', 'Sampel Ni ≥ cut-off = ore', 'in2');
   sec('G. Peta IDW (Map_*)');
-  par('idw_p', 'IDW: pangkat jarak', 2, '', 'Bobot = 1 / (d² + 1)^(pangkat/2)', 'in1'); par('idw_r', 'IDW: radius pencarian', 300, 'm', 'Hanya titik dalam radius ini dipakai', 'in1');
-  par('idw_min', 'IDW: minimum titik', 1, 'titik', 'Node dengan titik lebih sedikit dikosongkan', 'in1'); par('idw_buf', 'IDW: buffer grid', 50, 'm', 'Perluasan grid di luar sebaran lubang', 'in1');
+  par('idw_p', 'IDW: pangkat jarak', T.idw_p, '', 'Bobot = 1 / (d² + 1)^(pangkat/2)', 'in1'); par('idw_r', 'IDW: radius pencarian', T.idw_r, 'm', 'Hanya titik dalam radius ini dipakai', 'in1');
+  par('idw_min', 'IDW: minimum titik', T.idw_min, 'titik', 'Node dengan titik lebih sedikit dikosongkan', 'in1'); par('idw_buf', 'IDW: buffer grid', T.idw_buf, 'm', 'Perluasan grid di luar sebaran lubang', 'in1');
   const parameter = { name: 'Parameter', rows: prow, widths: [38, 14, 10, 80], tab: 'FFFFC000', freeze: [3, 0] };
   const p = k => P[k], pv = k => P[k + '_v'];
 
@@ -80,9 +80,9 @@ export function buildLabSheets({ site, generated, collars, assays, crm, setting,
   const arow = [HDR(AH)];
   prim.forEach((a, i) => {
     const r = i + 2, v = Object.fromEntries(AN.map(n => [n, assayValue(a, n)])), Ni = v.Ni, Fe = v.Fe, Mg = v.MgO, Al = v.Al2O3, Cr = v.Cr2O3, Fo = v.Fe2O3, MC = v.MC;
-    const cl = classify(Ni, Fe, Mg) ?? '';
+    const cl = classify(Ni, Fe, Mg, T) ?? '';
     const dev = Fo != null && Fe != null && Fe > 0 ? Fo / (Fe * FE_TO_FE2O3) - 1 : '';
-    const lv = lateriteLevel(Al, Cr), lvt = { high: 'Tinggi', medium: 'Sedang', low: 'Rendah' }[lv];
+    const lv = lateriteLevel(Al, Cr, T), lvt = { high: 'Tinggi', medium: 'Sedang', low: 'Rendah' }[lv];
     const stat = (x, hi, mid) => (x == null ? '' : x >= hi ? 'Tinggi' : x >= mid ? 'Sedang' : 'Rendah');
     const catL = ((Cr ?? 0) >= pv('cr_vhi') ? 'Cr2O3 sangat tinggi (kromit?); ' : '') + ((Al ?? 0) >= pv('al_vhi') ? 'Al2O3 sangat tinggi (clay/ferricrete?); ' : '');
     const flag = (dev !== '' && Math.abs(dev) > pv('fe_tol') ? 'Fe vs Fe2O3 tidak konsisten; ' : '') + ((MC ?? 0) >= pv('mc_hi') && MC != null ? 'MC tinggi; ' : '');
@@ -171,7 +171,7 @@ export function buildLabSheets({ site, generated, collars, assays, crm, setting,
   hs.forEach((h, i) => { const r = 5 + i, rows = prim.filter(a => a.hole_id === h); const len = rows.reduce((s, a) => s + (num(a.to_m) - num(a.from_m)), 0);
     const wavg = n => { let s = 0, w = 0; for (const a of rows) { const x = assayValue(a, n) ?? 0; const l = num(a.to_m) - num(a.from_m); s += x * l; w += l; } return w ? s / w : ''; };
     const ore = rows.filter(a => (assayValue(a, 'Ni') ?? -1) >= pv('cutoff')).reduce((s, a) => s + (num(a.to_m) - num(a.from_m)), 0);
-    const cc = k => rows.filter(a => classify(assayValue(a, 'Ni'), assayValue(a, 'Fe'), assayValue(a, 'MgO')) === k).length;
+    const cc = k => rows.filter(a => classify(assayValue(a, 'Ni'), assayValue(a, 'Fe'), assayValue(a, 'MgO'), T) === k).length;
     const wf = c => `IF($D${r}=0,"",SUMPRODUCT((${R('A')}=$A${r})*${R('E')}*${R(c)})/$D${r})`;
     hr.push([h, f(`COUNTIF(${R('A')},A${r})`, rows.length, 'n0'), f(`_xlfn.MAXIFS(${R('D')},${R('A')},A${r})`, Math.max(...rows.map(a => num(a.to_m))), 'n2'), f(`SUMIF(${R('A')},A${r},${R('E')})`, len, 'n2'),
       f(wf('H'), wavg('Ni'), 'n3'), f(wf('I'), wavg('Fe'), 'n2'), f(wf('K'), wavg('MgO'), 'n2'), f(`_xlfn.MAXIFS(${R('H')},${R('A')},A${r})`, Math.max(...rows.map(a => assayValue(a, 'Ni') ?? 0)), 'n2'),
@@ -189,7 +189,7 @@ export function buildLabSheets({ site, generated, collars, assays, crm, setting,
     sm.push([b, one?.certificate_no || '', one?.client_ref || '', hh, dm(one?.received_date), dm(one?.tested_date), dm(one?.reported_date), rs.length, f(`COUNTIF(${R('F')},A${r})`, np, 'n0'), f(`H${r}-I${r}`, rs.length - np, 'n0')]); });
   const e1 = 5 + batches.length;
   sm.push([], [{ v: 'Distribusi kelas geokimia (sampel primer)', s: 'band' }], HDR(['Kelas', 'Jumlah', '%']));
-  const cls = ['BRK', 'RSAP', 'SAP', 'CEK', 'LIM']; const cnt = Object.fromEntries(cls.map(k => [k, prim.filter(a => classify(assayValue(a, 'Ni'), assayValue(a, 'Fe'), assayValue(a, 'MgO')) === k).length]));
+  const cls = ['BRK', 'RSAP', 'SAP', 'CEK', 'LIM']; const cnt = Object.fromEntries(cls.map(k => [k, prim.filter(a => classify(assayValue(a, 'Ni'), assayValue(a, 'Fe'), assayValue(a, 'MgO'), T) === k).length]));
   const k0 = sm.length + 1; cls.forEach((k, i) => { const r = k0 + i; sm.push([k, f(`COUNTIF(${R('V')},A${r})`, cnt[k], 'n0'), f(`IF(${N}=0,"",B${r}/${N})`, N ? cnt[k] / N : '', 'pct')]); });
   const rr = analyze({ collar: collars, survey: [], sample: [], assay: A, crm: crmRows }, T);
   sm.push([], [{ v: 'Ringkasan QAQC', s: 'band' }], HDR(['Uji', 'Jumlah', 'Gagal']));
@@ -213,7 +213,7 @@ export function buildLabSheets({ site, generated, collars, assays, crm, setting,
     xr.push([f(`Assay_Data!A${r}`, a.hole_id), f(`Assay_Data!B${r}`, a.sample_no), f(`Assay_Data!C${r}`, num(a.from_m), 'n2'), f(`Assay_Data!D${r}`, num(a.to_m), 'n2'), f(`(C${r}+D${r})/2`, mid, 'n2'),
       f(look('B', r), X, 'n2'), f(look('C', r), Y, 'n2'), f(look('D', r), RL, 'n2'), f(`IF(ISNUMBER(H${r}),H${r}-E${r},"")`, RL === '' ? '' : RL - mid, 'n2'),
       f(`Assay_Data!H${r}`, ni ?? '', 'n3'), f(`Assay_Data!I${r}`, assayValue(a, 'Fe') ?? '', 'n2'), f(`Assay_Data!K${r}`, assayValue(a, 'MgO') ?? '', 'n2'),
-      f(`Assay_Data!V${r}`, classify(ni, assayValue(a, 'Fe'), assayValue(a, 'MgO')) ?? ''), f(`IF(J${r}>=${p('cutoff')},1,0)`, ni != null && ni >= pv('cutoff') ? 1 : 0, 'n0')]); });
+      f(`Assay_Data!V${r}`, classify(ni, assayValue(a, 'Fe'), assayValue(a, 'MgO'), T) ?? ''), f(`IF(J${r}>=${p('cutoff')},1,0)`, ni != null && ni >= pv('cutoff') ? 1 : 0, 'n0')]); });
   const xyz = { name: 'XYZ_Samples', rows: xr, widths: [12, 18, 8, 8, 8, 12, 12, 10, 10, 8, 8, 8, 12, 10], freeze: [1, 2], tab: 'FF70AD47' };
 
   /* ---- charts, composite and IDW maps (extra.js) ---- */

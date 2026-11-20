@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardTitle } from "./ui/card";
 import { today } from "./form-kit";
+import { useRoa } from "./roa-panel";
 
 const SHEET_LABEL: Record<string, string> = { COLLAR: "Collar", PROGRESS: "Progress", DIST_HOUR: "Jam rig", SURVEY: "Survey", SAMPLE: "Sample", ASSAY: "Assay" };
 const SHEET_FORM: Record<string, string> = { COLLAR: "collar", SURVEY: "collar", PROGRESS: "progress", DIST_HOUR: "hours", SAMPLE: "sample", ASSAY: "sample" };
@@ -44,6 +45,7 @@ export function ImportView({ info, tick }: { info: Info; tick?: string }) {
   const [pend, setPend] = useState(0); const [last, setLast] = useState<string | null>(null);
   const [err, setErr] = useState(""); const [done, setDone] = useState("");
   const [ana, setAna] = useState<any>(null);
+  const roa = useRoa(info);
 
   useEffect(() => { core().then(async ({ D }) => { setPend(await D.db.outbox.count()); setLast(localStorage.getItem(`exp_last_sync_${info.site}`)); }); }, [info.site, tick]);
 
@@ -116,20 +118,28 @@ export function ImportView({ info, tick }: { info: Info; tick?: string }) {
 
   return (
     <div className="enter flex flex-col gap-5">
-      <Card id="imp-card">
-        <CardTitle>Import dari Excel</CardTitle>
-        <p className="text-sm text-muted-foreground">Baris yang sudah ada (Hole ID, interval, atau nomor sampel yang sama) ditolak, tidak menimpa data. Pengecekan memakai data di HP ini; sinkron dulu agar terbaru (sinkron terakhir {last ? new Date(last).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "belum pernah"}{pend ? `, ${pend} data belum terkirim` : ""}).</p>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" id="tpl-dl" onClick={template}><Download />Unduh template</Button>
-          <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90">
-            <FileSpreadsheet className="size-4" />Pilih file Excel
-            <input id="imp-file" type="file" accept=".xlsx,.xls" className="sr-only" onChange={e => { pick(e.target.files?.[0]); e.target.value = ""; }} />
-          </label>
-        </div>
-        <div id="imp-msg">{err && <Note kind="err">{err}</Note>}</div>
-      </Card>
+      <header>
+        <h1 className="text-2xl font-semibold">Import Data</h1>
+        <p className="text-sm text-muted-foreground">Pilih sumber data. Keduanya memakai pengecekan yang sama dan tidak menimpa data yang sudah ada.</p>
+      </header>
+      <div className="grid items-stretch gap-4 md:grid-cols-2" id="imp-grid">
+        <Card id="imp-card" className="flex flex-col">
+          <CardTitle>Import Drillhole Data</CardTitle>
+          <p className="text-sm text-muted-foreground">Unduh template Excel, isi, lalu import. Baris yang sudah ada (Hole ID, interval, atau nomor sampel yang sama) ditolak, tidak menimpa data. Pengecekan memakai data di HP ini; sinkron dulu bila data baru dibuat di perangkat lain.</p>
+          <div className="mt-auto flex flex-wrap items-end gap-3">
+            <Button variant="outline" id="tpl-dl" onClick={template} className="h-10"><Download />Unduh template Excel</Button>
+            <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:opacity-90">
+              <FileSpreadsheet className="size-4" />Pilih file Excel
+              <input id="imp-file" type="file" accept=".xlsx,.xls" className="sr-only" onChange={e => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+            </label>
+          </div>
+          <div id="imp-msg">{err && <Note kind="err">{err}</Note>}</div>
+        </Card>
+        {roa.card}
+      </div>
       {done && <Card><Note kind="ok">{done}</Note></Card>}
       {A && !A.res.length && <Card><p className="text-sm text-muted-foreground">Tidak ada sheet COLLAR, PROGRESS, DIST_HOUR, SURVEY, SAMPLE, atau ASSAY di file ini. Pakai template.</p></Card>}
+      {roa.result}
       {A && A.res.length > 0 && <Result A={A} info={info} nAcc={nAcc} tot={tot} refresh={analyse} doImport={doImport} rejected={rejected} setWarn={(v: boolean) => { ui.withWarn = v; analyse(); }} />}
     </div>
   );

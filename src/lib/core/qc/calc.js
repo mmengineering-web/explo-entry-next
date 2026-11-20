@@ -12,6 +12,10 @@ export const DEFAULTS = {
   sent_warn_days: 7, sent_fail_days: 14,               // sample sent to lab, no result yet
   dip_dev_warn: 10,                                    // deg between collar dip and survey dip
   gps_warn_m: 5,
+  // geochemical classification (BRK > RSAP > SAP > CEK > LIM), laterite indicators and IDW map settings: the Parameter sheet of the Lab Analysis workbook
+  brk_ni: 0.8, brk_mgo: 30, brk_fe: 10, rsap_mgo: 20, rsap_fe: 15, sap_fe: 25, sap_mgo: 10, sap_mgo_min: 5,
+  al_hi: 8, al_mid: 4, cr_hi: 2, cr_mid: 1, cr_vhi: 4, al_vhi: 15,
+  idw_p: 2, idw_r: 300, idw_min: 1, idw_buf: 50,
   lab_resolution: 0.01,                                // the lab reports 2 decimals: a CRM Z-score is not meaningful when SD is below this
 };
 export const FE_TO_FE2O3 = 1.4297;
@@ -30,17 +34,18 @@ const round = (v, d) => (v == null ? null : Math.round(v * 10 ** d) / 10 ** d);
 const live = rows => (rows || []).filter(r => !r.is_deleted);
 
 /* ---------- ore classification and sample flags (workbook rules) ---------- */
-export function classify(ni, fe, mgo) {
+/* ---------- ore classification and sample flags (workbook rules) ---------- */
+export function classify(ni, fe, mgo, T = DEFAULTS) {
   if ([ni, fe, mgo].some(v => v == null)) return null;
-  if (ni < 0.8 && mgo >= 30 && fe < 10) return 'BRK';
-  if (mgo >= 20 && fe < 15) return 'RSAP';
-  if (mgo >= 10 || (fe < 25 && mgo >= 5)) return 'SAP';
-  if (fe < 25 && mgo < 5) return 'CEK';
+  if (ni < T.brk_ni && mgo >= T.brk_mgo && fe < T.brk_fe) return 'BRK';
+  if (mgo >= T.rsap_mgo && fe < T.rsap_fe) return 'RSAP';
+  if (mgo >= T.sap_mgo || (fe < T.sap_fe && mgo >= T.sap_mgo_min)) return 'SAP';
+  if (fe < T.sap_fe && mgo < T.sap_mgo_min) return 'CEK';
   return 'LIM';
 }
-export function lateriteLevel(al, cr) {
-  if ((al ?? 0) >= 8 || (cr ?? 0) >= 2) return 'high';
-  if ((al ?? 0) >= 4 || (cr ?? 0) >= 1) return 'medium';
+export function lateriteLevel(al, cr, T = DEFAULTS) {
+  if ((al ?? 0) >= T.al_hi || (cr ?? 0) >= T.cr_hi) return 'high';
+  if ((al ?? 0) >= T.al_mid || (cr ?? 0) >= T.cr_mid) return 'medium';
   return 'low';
 }
 export function assayFlags(a, T) {
@@ -190,7 +195,7 @@ export function analyze(d, T, now = new Date()) {
   for (const b of batches) if (b.missing.length && b.primary) issues.push({ sev: 'warning', cat: 'Batch', hole: '', ref: b.batch, msg: `No ${b.missing.join(', ')} QC in this batch` });
   const classes = {}, flags = [];
   for (const a of assays.filter(x => x.sample_type === 'NORMAL')) {
-    const v = valuesOf(a), cl = classify(v.Ni, v.Fe, v.MgO);
+    const v = valuesOf(a), cl = classify(v.Ni, v.Fe, v.MgO, T);
     if (cl) classes[cl] = (classes[cl] || 0) + 1;
     for (const f of assayFlags(a, T)) flags.push({ hole: a.hole_id, sample_no: a.sample_no, batch: a.batch_id, ...f });
   }
