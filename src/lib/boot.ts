@@ -36,6 +36,7 @@ export const TABS: { key: string; label: string; group: string; icon: string; ne
   { key: "collars", label: "Collar", group: "Input", icon: "MapPin", needs: "collar" },
   { key: "hours", label: "Distribution Hour", group: "Input", icon: "Clock", needs: "hours" },
   { key: "samples", label: "Sampel", group: "Input", icon: "FlaskConical", needs: "sample" },
+  { key: "roa", label: "RoA Lab", group: "Input", icon: "FileUp", needs: "sample", login: true },
   { key: "dash", label: "Dashboard", group: "Analisis", icon: "LayoutDashboard", login: true },
   { key: "qc", label: "Data QC", group: "Analisis", icon: "ShieldCheck", login: true },
   { key: "map", label: "Peta", group: "Analisis", icon: "Map", login: true },

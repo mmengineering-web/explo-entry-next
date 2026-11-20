@@ -231,3 +231,76 @@ html[data-density="compact"] { --control-h: 2.25rem; --control-h-sm: 1.875rem; -
 }
 .sh-core { transition: transform .5s var(--ease-out); transform: translate(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px)); }
 .sh-bands { transition: transform .6s var(--ease-out); transform: translate(calc(var(--px, 0) * 6px), calc(var(--py, 0) * 4px)) scale(1.03); transform-origin: center; }
+
+/* Lab Analysis sheet tables (Data QC) */
+.lab-tbl{width:auto;font-size:.75rem;border-collapse:collapse}
+.lab-tbl td{padding:.25rem .5rem;white-space:nowrap;border:1px solid var(--border);text-align:left}
+.lab-tbl td.lt-n{text-align:right}
+.lab-tbl td.lt-title{font-size:1rem;font-weight:700;border:0}
+.lab-tbl td.lt-note{color:var(--muted-foreground);font-style:italic;border:0;white-space:normal}
+.lab-tbl td.lt-hdr{background:var(--primary);color:var(--primary-foreground);font-weight:600;text-align:center}
+.lab-tbl td.lt-band,.lab-tbl td.lt-bold{font-weight:600;background:var(--muted)}
+.lab-tbl td.lt-in,.lab-tbl td.lt-in1,.lab-tbl td.lt-in2,.lab-tbl td.lt-in3,.lab-tbl td.lt-inpct{background:#fff2cc;color:#0000ff}
+.lab-tbl td.lt-e{border:0}
+
+/* Peta */
+.mp-tag{display:inline-block;margin-left:4px;padding:0 .5rem;font-size:.6875rem;font-weight:600;border:2px solid;border-radius:var(--radius-full)}
+.mp-h{margin-top:6px;font-weight:600}.mp-r{font-size:.75rem}
+.mlp-toggle{position:absolute;z-index:1000;top:.65rem;right:.65rem;min-height:var(--control-h-sm);padding:.25rem .85rem;font:inherit;font-size:.8125rem;font-weight:500;color:var(--foreground);background:var(--background);border:1px solid var(--input);border-radius:var(--radius-md);box-shadow:var(--shadow-md);cursor:pointer}
+.mlp{position:absolute;z-index:999;top:3.4rem;right:.65rem;width:19rem;max-height:calc(100% - 4rem);display:flex;flex-direction:column;font-size:.8125rem;color:var(--popover-foreground);background:var(--popover);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg)}
+.mlp[hidden]{display:none}
+.mlp-h{display:flex;gap:var(--sp-2);align-items:center;justify-content:space-between;padding:.65rem .8rem;border-bottom:1px solid var(--border)}
+.mlp-h select{max-width:11rem;min-height:var(--control-h-sm);margin:0;padding:.2rem 1.8rem .2rem .5rem;font-size:.8125rem}
+.mlp-list{overflow:auto;padding:var(--sp-1) 0}
+.mlp-row{padding:.4rem .8rem;border-bottom:1px solid var(--border)}
+.mlp-top{display:flex;align-items:center;gap:var(--sp-2)}
+.mlp-top input[type=checkbox]{margin:0}
+.mlp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;cursor:pointer}
+.mlp-top button{width:1.8rem;height:1.8rem;font:inherit;color:var(--foreground);background:var(--background);border:1px solid var(--input);border-radius:var(--radius-sm);cursor:pointer}
+.mlp-top button:hover{background:var(--accent)}
+.mlp-top button:disabled{opacity:.35;cursor:default}
+.mlp-ed{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;padding:.5rem 0 .25rem}
+.mlp-ed label{margin:0;font-size:.75rem;font-weight:400;color:var(--muted-foreground)}
+.mlp-ed input[type=color]{width:100%;height:1.9rem;margin-top:2px;padding:2px;min-height:0}
+.mlp-ed input[type=range]{width:100%;margin-top:2px}
+.mlp-ed select{min-height:1.9rem;margin-top:2px;padding:.2rem 1.6rem .2rem .45rem;font-size:.75rem}
+.mlp-btns{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.mlp-f{display:flex;padding:.65rem .8rem;border-top:1px solid var(--border)}
+.mlp-f .btn{flex:1}
+.maplabel,.leaflet-tooltip.maplabel{padding:0;font-size:.6875rem;font-weight:600;color:#0a0a0a;background:transparent;border:0;box-shadow:none;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.maplabel::before,.leaflet-tooltip.maplabel::before{display:none}
+.mpdf{position:fixed;inset:0;z-index:var(--z-overlay);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:var(--sp-6) var(--sp-3);background:var(--overlay)}
+.mpdf .card{width:100%;max-width:32rem;margin:0}
+@media (max-width:560px){.mlp{left:.65rem;right:.65rem;top:auto;bottom:.65rem;width:auto;max-height:55%}}
+
+/* vanilla-compat controls used by the imperative map panel, PDF dialog and layer manager */
+.mapx .btn,.mpdf .btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:var(--control-h);padding:.35rem 1rem;font:inherit;font-size:.875rem;font-weight:500;color:var(--foreground);background:var(--background);border:1px solid var(--input);border-radius:var(--radius-md);cursor:pointer}
+.mapx .btn:hover,.mpdf .btn:hover{background:var(--accent)}
+.mapx .btn.small,.mpdf .btn.small{min-height:var(--control-h-sm);padding:.2rem .7rem;font-size:.8125rem}
+.mapx .btn.primary,.mpdf .btn.primary{color:var(--primary-foreground);background:var(--primary);border-color:var(--primary)}
+.mapx .btn.danger{color:var(--danger);border-color:var(--danger-border)}
+.mapx .btn:disabled,.mpdf .btn:disabled{opacity:.5;cursor:default}
+.mapx .card,.mpdf .card{padding:var(--card-pad);background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);box-shadow:var(--shadow-xs);display:flex;flex-direction:column;gap:.75rem}
+.mapx .card h3,.mpdf .card h2{margin:0;font-weight:600}
+.mapx .msg,.mpdf .msg{padding:.5rem .75rem;border:1px solid;border-radius:var(--radius-md);font-size:.8125rem}
+.mapx .msg.ok,.mpdf .msg.ok{color:var(--success);background:var(--success-bg);border-color:var(--success-border)}
+.mapx .msg.warn{color:var(--warning);background:var(--warning-bg);border-color:var(--warning-border)}
+.mapx .msg.err,.mpdf .msg.err{color:var(--danger);background:var(--danger-bg);border-color:var(--danger-border)}
+.mapx .helpbox{padding:.6rem .8rem;font-size:.8125rem;color:var(--muted-foreground);background:var(--muted);border-radius:var(--radius-md)}
+.mapx .row,.mpdf .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:.75rem}
+.mapx .row.actions,.mpdf .row.actions{display:flex;gap:.5rem}
+.mapx label,.mpdf label{display:flex;flex-direction:column;gap:.25rem;font-size:.8125rem;font-weight:500}
+.mapx input:not([type=checkbox]):not([type=color]):not([type=range]),.mapx select,.mpdf input,.mpdf select,.mpdf textarea{min-height:var(--control-h);padding:.35rem .6rem;font:inherit;font-weight:400;color:var(--foreground);background:var(--background);border:1px solid var(--input);border-radius:var(--radius-md)}
+.mapx table.grid{width:100%;font-size:.8125rem;border-collapse:collapse}.mapx table.grid th,.mapx table.grid td{padding:.4rem .6rem;border-bottom:1px solid var(--border);text-align:left}
+.mapx .gridwrap{overflow-x:auto}.mapx .muted,.mpdf .muted{color:var(--muted-foreground)}.mapx .small,.mpdf .small{font-size:.8125rem}
+.mapx .sw{display:inline-block;width:1rem;height:1rem;border-radius:3px;flex:none}
+.mapx .mp table td{padding:0 .5rem 0 0}.mapx .mp-r.muted{color:var(--muted-foreground)}
+#map{min-height:70vh;border-radius:var(--radius-xl);overflow:hidden;position:relative}
+
+/* RoA Lab (plain-JS view) */
+.roax .tbl{width:100%;font-size:.8125rem;border-collapse:collapse}.roax .tbl th,.roax .tbl td{padding:.3rem .5rem;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.roax .tbl th{position:sticky;top:0;background:var(--muted)}
+.roax tr.roa-warn td{background:var(--warning-bg)}.roax tr.roa-skip td{color:var(--muted-foreground);background:var(--muted)}
+.roax label.btn input{display:none}
+.roax .row.actions{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+.roax h2,.roax h3{margin:0;font-weight:600}

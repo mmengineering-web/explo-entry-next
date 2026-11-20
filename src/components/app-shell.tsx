@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertTriangle, Clock, Database, Ellipsis, FileSpreadsheet, FileText, FlaskConical, Layers, LayoutDashboard, LogOut, Map as MapIcon, MapPin, Moon,
+  AlertTriangle, Clock, Database, Ellipsis, FileSpreadsheet, FileText, FileUp, FlaskConical, Layers, LayoutDashboard, LogOut, Map as MapIcon, MapPin, Moon,
   Pickaxe, RefreshCw, Rows3, Search, Settings, ShieldCheck, Sun, Wifi, WifiOff,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -22,10 +22,14 @@ import { ReportView } from "./report-view";
 import { DataRecords } from "./data-records";
 import { ImportView } from "./import-view";
 import { AdminView } from "./admin-view";
+import { DashboardView } from "./dashboard-view";
+import { QcView } from "./qc-view";
+import { MapView } from "./map-view";
+import { RoaView } from "./roa-view";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  AlertTriangle, Clock, Database, FileSpreadsheet, FileText, FlaskConical, Layers, LayoutDashboard, Map: MapIcon, MapPin, Pickaxe, RefreshCw, Settings, ShieldCheck, Wifi, WifiOff,
+  AlertTriangle, Clock, Database, FileSpreadsheet, FileText, FileUp, FlaskConical, Layers, LayoutDashboard, Map: MapIcon, MapPin, Pickaxe, RefreshCw, Settings, ShieldCheck, Wifi, WifiOff,
 };
 const Ico = ({ name, className }: { name: string; className?: string }) => {
   const C = ICONS[name] ?? Layers;
@@ -148,6 +152,10 @@ function Main({ info, onLogout }: { info: Info; onLogout: () => void }) {
               : tab === "samples" ? <SampleForm info={info} tick={`${st.last}-${st.pending}`} />
               : tab === "import" ? <ImportView info={info} tick={`${st.last}-${st.pending}`} />
               : tab === "admin" ? <AdminView info={info} />
+              : tab === "roa" ? <RoaView info={info} />
+              : tab === "map" ? <MapView info={info} />
+              : tab === "qc" ? <QcView info={info} />
+              : tab === "dash" ? <DashboardView info={info} />
               : tab === "report" ? <ReportView info={info} tick={`${st.last}-${st.pending}`} />
               : tab === "list" ? <DataRecords info={info} tick={`${st.last}-${st.pending}`} go={go} />
               : <Soon label={cur?.label ?? ""} />}
