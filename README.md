@@ -8,7 +8,7 @@ Runs side by side with the vanilla v2.0.0 app until phone testing passes.
 |---|---|---|
 | 1 | Scaffold, tokens, shell, login, guest mode, Dexie + outbox sync, command palette, Progress form with dynamic rules | Done |
 | 2a | Collar, Distribution Hour, Sampel forms, shared form kit, searchable record list, confirm dialog | Done |
-| 2b | Data Records, Laporan, Import, Pengaturan | Todo |
+| 2b | Data Records (lists, Excel and photo backup), Laporan, Import (template, preview, register missing), Pengaturan (rig, prospect, code lists with drag order, parameters, users, roles) | Done |
 | 3 | Dashboard, Data QC, collar map, Excel/PDF export, RoA Lab, Lab Analysis | Todo |
 | 4 | 3D drill-hole view (react-three-fiber, low-power fallback), login scene polish | Todo |
 | 5 | Port browser tests, real-phone tests, docs, Vercel domain swap | Todo |
@@ -23,6 +23,7 @@ npm run build        # production static export -> out/ + sw.js
 npm run build:test   # test build -> out-test/ with a fake Supabase (NEVER deploy)
 npm run test:unit    # rule evaluator tests
 python3 tests/e2e.py        # shell, login, Progress form
+python3 tests/e2e_data.py   # Laporan, Data Records, Import, Pengaturan (site admin role via window.__role)
 python3 tests/e2e_forms.py  # Collar, Distribution Hour, Sampel (env CHROME, BASE default http://localhost:8801, SHOTS)
 ```
 e2e flow: `npm run build:test`, serve `out-test/` on port 8801, run `tests/e2e.py`.

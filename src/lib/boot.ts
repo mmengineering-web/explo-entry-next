@@ -39,11 +39,12 @@ export const TABS: { key: string; label: string; group: string; icon: string; ne
   { key: "dash", label: "Dashboard", group: "Analisis", icon: "LayoutDashboard", login: true },
   { key: "qc", label: "Data QC", group: "Analisis", icon: "ShieldCheck", login: true },
   { key: "map", label: "Peta", group: "Analisis", icon: "Map", login: true },
+  { key: "import", label: "Import", group: "Data", icon: "FileSpreadsheet", needs: "any" },
   { key: "report", label: "Laporan", group: "Data", icon: "FileText" },
   { key: "list", label: "Data Records", group: "Data", icon: "Database" },
   { key: "admin", label: "Pengaturan", group: "Sistem", icon: "Settings", login: true },
 ];
 
 export function tabsFor(i: Info) {
-  return TABS.filter(t => (t.needs ? canForm(i, t.needs) : true) && (t.login ? !i.guest : true));
+  return TABS.filter(t => (t.needs === "any" ? ["progress","collar","hours","sample"].some(f => canForm(i, f)) && !i.guest : t.needs ? canForm(i, t.needs) : true) && (t.login ? !i.guest : true));
 }
