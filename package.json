@@ -7,14 +7,16 @@
     "build": "next build && node scripts/make-sw.mjs",
     "start": "next start",
     "lint": "eslint",
-    "test:unit": "node --no-warnings tests/rules.test.mjs && node --no-warnings tests/roa_qc.test.mjs && node --no-warnings tests/calc.test.mjs",
+    "test:unit": "node --no-warnings tests/rules.test.mjs && node --no-warnings tests/roa_qc.test.mjs && node --no-warnings tests/calc.test.mjs && node --no-warnings tests/geo3d.test.mjs",
     "build:test": "EXP_STUB=1 next build && EXP_STUB=1 node scripts/make-sw.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.3.1",
     "@radix-ui/react-label": "^2.1.17",
     "@radix-ui/react-slot": "^1.5.0",
+    "@react-three/fiber": "^9.8.2",
     "@supabase/supabase-js": "^2.119.1",
+    "@types/three": "^0.187.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -24,7 +26,8 @@
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",

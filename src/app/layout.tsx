@@ -24,8 +24,8 @@ export const metadata: Metadata = {
 };
 export const viewport: Viewport = { themeColor: "#c2410c", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
-// Sets theme and density before first paint so there is no flash.
-const PRE = `try{var d=document.documentElement,t=localStorage.getItem('exp_theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';d.dataset.theme=t;var n=localStorage.getItem('exp_density');if(n==='compact')d.dataset.density='compact'}catch(e){}`;
+// Sets theme before first paint so there is no flash.
+const PRE = `try{var d=document.documentElement,t=localStorage.getItem('exp_theme');if(!t)t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';d.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

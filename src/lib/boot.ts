@@ -39,6 +39,7 @@ export const TABS: { key: string; label: string; group: string; icon: string; ne
   { key: "dash", label: "Dashboard", group: "Analisis", icon: "LayoutDashboard", login: true },
   { key: "qc", label: "Data QC", group: "Analisis", icon: "ShieldCheck", login: true },
   { key: "map", label: "Peta", group: "Analisis", icon: "Map", login: true },
+  { key: "d3", label: "3D Hole", group: "Analisis", icon: "Box", login: true },
   { key: "import", label: "Import Data", group: "Data", icon: "FileSpreadsheet", needs: "any" },
   { key: "report", label: "Laporan", group: "Data", icon: "FileText" },
   { key: "list", label: "Data Records", group: "Data", icon: "Database" },

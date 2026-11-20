@@ -1,12 +1,12 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertTriangle, Clock, Database, Ellipsis, FileSpreadsheet, FileText, FlaskConical, Layers, LayoutDashboard, LogOut, Map as MapIcon, MapPin, Moon,
-  Pickaxe, RefreshCw, Rows3, Search, Settings, ShieldCheck, Sun, Wifi, WifiOff,
+  AlertTriangle, Box, Clock, Database, Ellipsis, FileSpreadsheet, FileText, FlaskConical, Layers, LayoutDashboard, LogOut, Map as MapIcon, MapPin, Moon,
+  Pickaxe, RefreshCw, Search, Settings, ShieldCheck, Sun, Wifi, WifiOff,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { core, openSite, tabsFor, TABS, type Info, type SyncStatus } from "@/lib/boot";
-import { useDensity, useTheme } from "@/lib/ui-state";
+import { useTheme } from "@/lib/ui-state";
 import { Login } from "./login";
 import { BrandMark } from "./brand-mark";
 import { ToastProvider } from "./toast";
@@ -25,10 +25,11 @@ import { AdminView } from "./admin-view";
 import { DashboardView } from "./dashboard-view";
 import { QcView } from "./qc-view";
 import { MapView } from "./map-view";
+import { Drill3dView } from "./drill3d-view";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  AlertTriangle, Clock, Database, FileSpreadsheet, FileText, FlaskConical, Layers, LayoutDashboard, Map: MapIcon, MapPin, Pickaxe, RefreshCw, Settings, ShieldCheck, Wifi, WifiOff,
+  AlertTriangle, Box, Clock, Database, FileSpreadsheet, FileText, FlaskConical, Layers, LayoutDashboard, Map: MapIcon, MapPin, Pickaxe, RefreshCw, Settings, ShieldCheck, Wifi, WifiOff,
 };
 const Ico = ({ name, className }: { name: string; className?: string }) => {
   const C = ICONS[name] ?? Layers;
@@ -63,7 +64,6 @@ function Main({ info, onLogout }: { info: Info; onLogout: () => void }) {
   const [pal, setPal] = useState(false);
   const [st, setSt] = useState<SyncStatus>({ pending: 0, online: true, syncing: false, error: null, last: null });
   const { theme, toggle: toggleTheme } = useTheme();
-  const { density, toggle: toggleDensity } = useDensity();
   const chipKey = `${st.online}-${st.syncing}-${st.pending}-${!!st.error}`;
 
   useEffect(() => {
@@ -152,6 +152,7 @@ function Main({ info, onLogout }: { info: Info; onLogout: () => void }) {
               : tab === "import" ? <ImportView info={info} tick={`${st.last}-${st.pending}`} />
               : tab === "admin" ? <AdminView info={info} />
               : tab === "map" ? <MapView info={info} />
+              : tab === "d3" ? <Drill3dView info={info} />
               : tab === "qc" ? <QcView info={info} />
               : tab === "dash" ? <DashboardView info={info} />
               : tab === "report" ? <ReportView info={info} tick={`${st.last}-${st.pending}`} />
@@ -187,7 +188,6 @@ function Main({ info, onLogout }: { info: Info; onLogout: () => void }) {
           <CommandGroup heading="Aksi">
             {!info.guest && <CommandItem value="sync sekarang" onSelect={() => { core().then(c => c.S.syncNow()); setPal(false); }}><RefreshCw />Sync sekarang</CommandItem>}
             <CommandItem value="ganti tema gelap terang" onSelect={() => { toggleTheme(); setPal(false); }}><Moon />Ganti tema</CommandItem>
-            <CommandItem value="tampilan padat lega density" onSelect={() => { toggleDensity(); setPal(false); }}><Rows3 />{density === "compact" ? "Tampilan lega" : "Tampilan padat"}</CommandItem>
             <CommandItem value="keluar logout" onSelect={() => { setPal(false); logout(); }}><LogOut />Keluar</CommandItem>
           </CommandGroup>
         </CommandList>

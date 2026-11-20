@@ -58,3 +58,12 @@ e2e flow: `npm run build:test`, serve `out-test/` on port 8801, run `tests/e2e.p
 ## Update: Import Data tab and editable lab parameters
 - The separate RoA Lab tab is gone. **Import Data** now holds two cards side by side: Import Drillhole Data (template download, Excel file) and Import RoA Lab (Nama lab, RoA PDF). Buttons are aligned on one row.
 - Lab Analysis parameters (classification, laterite, consistency, QAQC, sample flow, ore cut-off, IDW) are editable by admin and super admin in Data QC > Lab Analysis > Parameters. Values are saved in `exp_setting` key `qaqc_thresholds`; Reset restores defaults. Every sheet, chart and the Excel download recalculate. Defaults live in `src/lib/core/qc/calc.js`, the form layout in `src/lib/core/lab/params.js`.
+
+
+## Phase 4: 3D Hole (done)
+- New **3D Hole** tab (login only, live read like Data QC, cached 2 minutes). Holes are drawn along a minimum-curvature path from collar dip/azimuth and survey stations (dip -90 = vertical down; no dip and no survey = vertical). Collar position is UTM from as-built, else planned, lat/lon; RL from collar elevation.
+- Colour by Class (BRK/RSAP/SAP/CEK/LIM, one earth hue, light to dark), Ni, Fe or MgO. Prospect filter, vertical exaggeration 1x to 5x, labels, reset view, click a hole (or its row) for the interval table.
+- Low-power path: no WebGL, 2 cores or less, 2 GB memory or less, or reduced-motion starts in a plain SVG plan + section view (section bearing selectable). 3D stays one tap away when WebGL exists. The 3D scene renders on demand only, so it does not drain a battery while idle.
+- three.js and react-three-fiber load only when the tab opens in 3D (lazy chunk, precached by the service worker).
+- Code: `src/lib/core/geo3d.js` (pure geometry), `src/components/drill3d-view.tsx`, `drill3d-scene.tsx`. Tests: `tests/geo3d.test.mjs`, `tests/e2e_3d.py`.
+- The display-density switch was removed.

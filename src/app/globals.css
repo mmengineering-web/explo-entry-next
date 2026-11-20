@@ -138,9 +138,6 @@
   --strata-1:#9a3412; --strata-2:#ea580c; --strata-3:#f08a52; --strata-4:#b8704a; --strata-5:#7a4a33;
   --glow:rgba(251,146,60,.2); --surface-hi:rgba(255,240,225,.06);
 }
-/* density: comfortable (default) or compact, chosen per device from the command palette */
-html[data-density="compact"]{--control-h:2.25rem;--control-h-sm:1.875rem;--control-h-lg:2.625rem;--card-pad:.9rem}
-@media (pointer:coarse){html[data-density="compact"]{--control-h:2.75rem;--control-h-sm:2.25rem;--control-h-lg:2.875rem}}
 @media (prefers-reduced-motion:reduce){:root{--dur-3:0s;--dur-4:0s;--stagger:0ms}}
 
 /* ---- Tailwind v4 theme mapping (shadcn names) ---- */
@@ -192,10 +189,6 @@ html[data-density="compact"]{--control-h:2.25rem;--control-h-sm:1.875rem;--contr
 
 /* required-field dot instead of an asterisk */
 label:has(:required) > .lbl::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 9999px; background: var(--accent-brand); vertical-align: 1px; }
-
-/* density, per device */
-html[data-density="compact"] { --control-h: 2.25rem; --control-h-sm: 1.875rem; --card-pad: .9rem; }
-@media (pointer: coarse) { html[data-density="compact"] { --control-h: 2.75rem; --control-h-sm: 2.25rem; } }
 
 /* dynamic-rule collapse: grid-row transition, no height measuring */
 .dyn { display: grid; grid-template-rows: 1fr; transition: grid-template-rows var(--dur-3) var(--ease-out), opacity var(--dur-2) var(--ease); }

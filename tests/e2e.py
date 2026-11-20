@@ -66,7 +66,7 @@ with sync_playwright() as p:
     check('record saved on the device', n[0] >= 1, n)   # a successful fake sync empties the outbox, so the outbox is checked in guest mode below
     check('saved record appears in the list', pg.locator('#prec li').count() >= 1)
 
-    # command palette, theme, density
+    # command palette, theme
     pg.keyboard.press('Control+k'); pg.wait_for_selector('[cmdk-input]'); pg.wait_for_timeout(300)
     pg.screenshot(path=f'{SHOTS}/palette_d.png')
     n0 = pg.locator('[cmdk-item]').count(); pg.fill('[cmdk-input]', 'sam'); pg.wait_for_timeout(150)
@@ -74,8 +74,6 @@ with sync_playwright() as p:
     pg.keyboard.press('Enter'); pg.wait_for_timeout(500)
     check('palette navigates to Sampel', pg.get_attribute('#view', 'data-tab') == 'samples', pg.get_attribute('#view', 'data-tab'))
     check('palette closed', pg.locator('[cmdk-input]').count() == 0)
-    pg.keyboard.press('Control+k'); pg.wait_for_selector('[cmdk-input]'); pg.fill('[cmdk-input]', 'padat'); pg.keyboard.press('Enter'); pg.wait_for_timeout(300)
-    check('density compact', pg.evaluate("document.documentElement.dataset.density") == 'compact')
     pg.keyboard.press('Control+k'); pg.wait_for_selector('[cmdk-input]'); pg.keyboard.press('Escape'); pg.wait_for_timeout(250)
     check('Esc closes palette', pg.locator('[cmdk-input]').count() == 0)
     pg.click('header button[aria-label="Ganti tema"]'); pg.wait_for_timeout(200)
